@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <gunzip src="/Users/maxmeyer/IdeaProjects/DAQConfigLoader/target/DaqConfigLoader-0.0.1-dist.tar.gz"/>
+  <untar src="/Users/maxmeyer/IdeaProjects/DAQConfigLoader/target/DaqConfigLoader-0.0.1-dist.tar" dest="/Users/maxmeyer/IdeaProjects/DAQConfigLoader/target/distribution/DaqConfigLoader-0.0.1"/>
+  <copy todir="/Users/maxmeyer/IdeaProjects/DAQConfigLoader/target/distribution/DaqConfigLoader-0.0.1" overwrite="true">
+    <fileset dir="/Users/maxmeyer/IdeaProjects/DAQConfigLoader/target/distribution/tar"/>
+    <fileset dir="/Users/maxmeyer/IdeaProjects/DAQConfigLoader/target/distribution/docker"/>
+  </copy>
+</target>
+</project>

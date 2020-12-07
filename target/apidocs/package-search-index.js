@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"de.tub.sense.daq.config"},{"l":"de.tub.sense.daq.config.file"}]
