@@ -3,9 +3,8 @@ package de.tub.sense.daq.config;
 import cern.c2mon.client.core.C2monServiceGateway;
 import cern.c2mon.client.core.service.ConfigurationService;
 import de.tub.sense.daq.config.file.DAQConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
 
 /**
  * @author maxmeyer
@@ -24,11 +23,9 @@ public class ConfigurationInitializer {
         this.configurationService = C2monServiceGateway.getConfigurationService();
     }
 
-    @PostConstruct
     private void init() {
-        DAQConfiguration configuration = parser.getDaqConfiguration();
-
-        System.out.println(configuration.toString());
+       //DAQConfiguration configuration = parser.getDaqConfiguration();
+       // System.out.println(configuration.toString());
         /* String hostName = "";
         String processName = "";
 
@@ -39,6 +36,8 @@ public class ConfigurationInitializer {
         configurationService.createProcess(processName);
         configurationService.createEquipment(processName, hostName, "");
          */
+
+        configurationService.createProcess("TESTPROCESS");
     }
 
     private boolean isProcessConfigured(String processName) {

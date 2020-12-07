@@ -45,6 +45,11 @@
             <version>1.10.0</version>
         </dependency>
         <dependency>
+            <groupId>cern.c2mon.shared</groupId>
+            <artifactId>c2mon-shared-common</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.16</version>
