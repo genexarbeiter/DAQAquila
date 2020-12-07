@@ -1,0 +1,41 @@
+# settings for the modbus device
+modbusSettings: # required
+  address: 127.0.0.1 # required
+  port: 5020 # required
+  unitID: 10 # optional but required? for load simulator device
+
+# settings for the c2mon connection
+c2monSettings: # required
+  clientAddress: 192.168.111.77 # required
+  clientPort: 30203 # optional, 61616 is the default port number
+  #daqAddress: # optional
+  #daqPort: # optional
+
+# setting of the cinergia electric last  model in general
+modelSettings:
+  modelName: CinergiaEl20_DEV6 # required, will be in front of the tag name
+  modelVersion: 0.0.1 # optional
+  equipmentName: E_CINERGIA_EL_20_DEV6 # required
+  processName: P_CINERGIA_EL_20_DEV6 # required
+  interval: 1000 # optional, time in milliseconds for refreshing all data tags
+
+# define all signals (data and commands) provided by the modbus interface
+signals: # required
+# Data tags
+- name: Alarm_Vector_ABR # required
+  type: s64 # optional, data type defined by SourceDataType enum
+  description: ERROR ALARM WORD INPUT # optional
+  modbus: # required
+    type: read # required type can be one of the following words: [read,write]
+    register: holding32 # required; read => [holding] write => [holding]
+    startAddress: 13000 # required
+
+- name: SW_GrafcetState # required
+  min: 0
+  max: 4294967296
+  type: s64 # optional, data type defined by SourceDataType enum
+  description: STATUS WORD INPUT # optional
+  modbus: # required
+    type: read # required type can be one of the following words: [read,write]
+    register: holding32 # required; read => [holding] write => [holding]
+    startAddress: 16000 # required
