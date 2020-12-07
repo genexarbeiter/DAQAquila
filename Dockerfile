@@ -1,9 +1,9 @@
 # Base Alpine Linux based image with OpenJDK JRE only
-FROM openjdk:8-jre-alpine
+#FROM openjdk:8-jre-alpine
 
 # copy distribution ouput folder; includes mainly application jar file and libraries
-COPY target/DaqConfigLoader-0.0.1.jar /modbus-daq/
-COPY target/distribution/DaqConfigLoader-0.0.1/lib /modbus-daq/lib
+#COPY target/DaqConfigLoader-0.0.1.jar /modbus-daq/
+#COPY target/distribution/DaqConfigLoader-0.0.1/lib /modbus-daq/lib
 
 # start DAQ from jar-file with externally mounted (!) configuration file (needs a mounted volume on "/daq-config.yaml")
 #RUN apk update && apk add bash
@@ -11,4 +11,15 @@ COPY target/distribution/DaqConfigLoader-0.0.1/lib /modbus-daq/lib
 #    rm -rf /var/cache/apk/*
 #RUN chmod +x modbus-daq/distribution/tar/bin/daqprocess.sh
 #CMD ["modbus-daq/distribution/tar/bin/daqprocess.sh", "start", "P_HOST99"]
-CMD["/usr/bin/java", "-jar", "/modbus-daq/DaqConfigLoader-0.0.1.jar"]
+#CMD["/usr/bin/java", "-jar", "/modbus-daq/DaqConfigLoader-0.0.1.jar"]
+
+FROM maven:3.6.3-openjdk-14-slim AS build
+RUN mkdir -p /workspace
+WORKDIR /workspace
+COPY pom.xml /workspace
+COPY src /workspace/src
+RUN mvn -B package --file pom.xml -DskipTests
+
+FROM openjdk:14-slim
+COPY --from=build /workspace/target/*DaqConfigLoader-0.0.1.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]
