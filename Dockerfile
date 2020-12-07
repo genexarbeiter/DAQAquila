@@ -2,13 +2,9 @@
 FROM openjdk:8-jre-alpine
 
 # copy distribution ouput folder; includes mainly application jar file and libraries
-COPY target/distribution/ /modbus-daq
-
-#TEST YAML
-#COPY target/classes/de/demo_config.yaml /modbus-daq
-
-# copy logback files
-#COPY src/main/resources/zip/logback*.xml /modbus-daq/
+COPY target/ /modbus-daq/
 
 # start DAQ from jar-file with externally mounted (!) configuration file (needs a mounted volume on "/daq-config.yaml")
-CMD ["sh", "/modbus-daq/tar/bin/daqprocess.sh start P_HOST99"]
+RUN apk update && apk add bash
+RUN chmod +x modbus-daq/distribution/tar/bin/daqprocess.sh
+CMD ["modbus-daq/distribution/tar/bin/daqprocess.sh", "start", "P_HOST99"]
