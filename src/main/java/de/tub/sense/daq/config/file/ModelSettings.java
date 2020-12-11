@@ -16,8 +16,8 @@ import lombok.ToString;
 @ToString
 public class ModelSettings {
 
-    private String name;
-    private String version;
+    private String modelName;
+    private String modelVersion;
     private String equipmentName;
     private String processName;
     private long interval;

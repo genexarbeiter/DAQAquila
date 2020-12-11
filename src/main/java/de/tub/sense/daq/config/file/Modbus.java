@@ -2,6 +2,7 @@ package de.tub.sense.daq.config.file;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 /**
@@ -11,10 +12,11 @@ import lombok.ToString;
  */
 
 @Getter
+@Setter
 @ToString
 public class Modbus {
 
-    private ModbusType type;
+    private String type;
     private String register;
     private long startAddress;
 

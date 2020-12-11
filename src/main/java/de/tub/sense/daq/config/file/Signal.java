@@ -17,7 +17,7 @@ import lombok.ToString;
 public class Signal {
 
     private String name;
-    private SourceDataType type;
+    private String type;
     private String description;
     private Modbus modbus;
     private long min;

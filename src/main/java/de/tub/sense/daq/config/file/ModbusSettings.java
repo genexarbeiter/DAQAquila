@@ -17,7 +17,7 @@ import lombok.ToString;
 public class ModbusSettings {
 
     private String address;
-    private String port;
-    private String unitId;
+    private int port;
+    private int unitID;
 
 }

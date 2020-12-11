@@ -1,13 +1,9 @@
 package de.tub.sense.daq.module;
 
 import cern.c2mon.client.core.C2monServiceGateway;
-import de.tub.sense.daq.modbus.ModbusService;
-import de.tub.sense.daq.modbus.protocols.TcpModbusSocket;
+import de.tub.sense.daq.config.ConfigurationParser;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.io.IOException;
 
 /**
  * @author maxmeyer
@@ -26,12 +22,13 @@ public class DAQMain {
         if (!loadEnvironment()) {
             return;
         }
+
         C2monServiceGateway.startC2monClientSynchronous();
         Runtime.getRuntime().addShutdownHook(new Thread(C2monServiceGateway::stopC2monClient));
 
-        TcpModbusSocket tcpModbusSocket = new TcpModbusSocket("172.16.0.82", 502, 1);
-        tcpModbusSocket.connect();
-        System.out.println(tcpModbusSocket.readHoldingRegisters(13000).toString());
+        DAQMessageHandler daqMessageHandler = new DAQMessageHandler(new ConfigurationParser().getDaqConfiguration());
+        daqMessageHandler.connectToDataSource();
+
     }
 
     /**

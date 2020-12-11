@@ -2,6 +2,7 @@ package de.tub.sense.daq.config;
 
 import de.tub.sense.daq.config.file.DAQConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;
@@ -39,12 +40,12 @@ public class ConfigurationParser {
     }
 
     private void parseConfiguration() {
-        //Yaml yaml = new Yaml(new Constructor(DAQConfiguration.class));
-        //daqConfiguration = yaml.load(daqConfigFileStream);
+        Yaml yaml = new Yaml(new Constructor(DAQConfiguration.class));
+        daqConfiguration = yaml.load(daqConfigFileStream);
     }
 
     public DAQConfiguration getDaqConfiguration() {
-        if(daqConfiguration == null) {
+        if (daqConfiguration == null) {
             parseConfiguration();
         }
         return this.daqConfiguration;
