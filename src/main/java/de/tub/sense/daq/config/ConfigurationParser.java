@@ -27,6 +27,7 @@ public class ConfigurationParser {
         loadFile();
     }
 
+
     private void loadFile() {
         //Just for development, later file is fetched from server
         try {
