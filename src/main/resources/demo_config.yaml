@@ -1,6 +1,6 @@
 # settings for the modbus device
 modbusSettings: # required
-  address: 172.16.0.81 # required
+  address: 172.16.0.82 # required
   port: 502 # required
   unitID: 1 # optional but required? for load simulator device
 
@@ -33,6 +33,7 @@ signals: # required
 - name: SW_GrafcetState # required
   min: 0
   max: 4294967296
+
   offset: 0.0 #default 0
   multiplier: 1.0 #default 1
   type: s64 # optional, data type defined by SourceDataType enum
@@ -41,3 +42,12 @@ signals: # required
     type: read # required type can be one of the following words: [read,write]
     register: holding32 # required; read => [holding] write => [holding]
     startAddress: 16000 # required
+    bitNumber: 0 #optional, read only a single specified
+
+- name: Test # required
+  type: s64 # optional, data type defined by SourceDataType enum
+  description: ERROR ALARM WORD INPUT # optional
+  modbus: # required
+    type: read # required type can be one of the following words: [read,write]
+    register: holding32 # required; read => [holding] write => [holding]
+    startAddress: 13000 # required
