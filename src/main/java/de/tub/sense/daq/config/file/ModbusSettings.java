@@ -1,6 +1,5 @@
 package de.tub.sense.daq.config.file;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

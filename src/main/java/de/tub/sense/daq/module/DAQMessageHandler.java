@@ -2,10 +2,10 @@ package de.tub.sense.daq.module;
 
 import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
-import de.tub.sense.daq.config.ConfigurationParser;
-import de.tub.sense.daq.config.file.DAQConfiguration;
-import de.tub.sense.daq.modbus.protocols.TcpModbusSocket;
+import de.tub.sense.daq.config.DAQConfiguration;
+import de.tub.sense.daq.modbus.TcpModbusSocket;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,12 +15,14 @@ import org.springframework.stereotype.Service;
  */
 
 @Slf4j
-public class DAQMessageHandler extends EquipmentMessageHandler {
+@Service
+public class DAQMessageHandler extends EquipmentMessageHandler implements CommandLineRunner {
 
-    private final DAQConfiguration daqConfiguration;
+    private final DAQConfiguration configuration;
+    private TcpModbusSocket tcpModbusSocket;
 
-    public DAQMessageHandler(DAQConfiguration daqConfiguration) {
-        this.daqConfiguration = daqConfiguration;
+    public DAQMessageHandler(DAQConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     /**
@@ -30,11 +32,11 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     @Override
     public void connectToDataSource() {
-        String host = daqConfiguration.getModbusSettings().getAddress();
-        int port = daqConfiguration.getModbusSettings().getPort();
-        int unitId = daqConfiguration.getModbusSettings().getUnitID();
+        String host = configuration.getConfiguration().getModbusSettings().getAddress();
+        int port = configuration.getConfiguration().getModbusSettings().getPort();
+        int unitId = configuration.getConfiguration().getModbusSettings().getUnitID();
         try {
-            TcpModbusSocket tcpModbusSocket = new TcpModbusSocket(host, port, unitId);
+            tcpModbusSocket = new TcpModbusSocket(host, port, unitId);
             tcpModbusSocket.connect();
         } catch (Exception e) {
             log.error("Connection to modbus datasource with address {}:{} and unit id {} failed with exception message {}.", host, port, unitId, e.getMessage());
@@ -48,7 +50,9 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     @Override
     public void disconnectFromDataSource() throws EqIOException {
-
+        log.info("Disconnecting from datasource...");
+        tcpModbusSocket.disconnect();
+        log.info("Disconnected from datasource.");
     }
 
     /**
@@ -67,5 +71,12 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     @Override
     public void refreshDataTag(long tagId) {
 
+    }
+
+
+    @Override
+    public void run(String... args) throws Exception {
+        log.info("Connecting to datasource...");
+        this.connectToDataSource();
     }
 }

@@ -1,6 +1,5 @@
 package de.tub.sense.daq.config.file;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -16,7 +15,7 @@ import java.util.ArrayList;
 @Getter
 @Setter
 @ToString
-public class DAQConfiguration {
+public class ConfigurationFile {
 
     private ModbusSettings modbusSettings;
     private C2monSettings c2monSettings;

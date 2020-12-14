@@ -4,7 +4,7 @@ import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
 import com.ghgande.j2mod.modbus.msg.ReadInputDiscretesResponse;
 import com.ghgande.j2mod.modbus.msg.ReadInputRegistersResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
-import de.tub.sense.daq.modbus.protocols.ModbusFunctionFactory;
+import de.tub.sense.daq.modbus.ModbusFunctionFactory;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;

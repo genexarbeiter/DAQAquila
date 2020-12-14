@@ -1,4 +1,4 @@
-package de.tub.sense.daq.modbus.protocols;
+package de.tub.sense.daq.modbus;
 
 import com.ghgande.j2mod.modbus.msg.*;
 import com.ghgande.j2mod.modbus.procimg.Register;

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import de.tub.sense.daq.old.json.JacksonFactory;
-import de.tub.sense.daq.modbus.protocols.ModbusFunctionFactory;
+import de.tub.sense.daq.modbus.ModbusFunctionFactory;
 import org.simpleframework.xml.Element;
 
 /**

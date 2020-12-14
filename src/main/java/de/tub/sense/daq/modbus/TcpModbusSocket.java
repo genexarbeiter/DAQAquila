@@ -1,4 +1,4 @@
-package de.tub.sense.daq.modbus.protocols;
+package de.tub.sense.daq.modbus;
 
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.io.ModbusTransaction;
@@ -29,6 +29,12 @@ public class TcpModbusSocket extends ModbusFunctionFactory {
         this.oUnitID = unitID;
     }
 
+    /**
+     * Establish modbus connection
+     *
+     * @return true if connection success false if not
+     * @throws Exception if something goes wrong while connecting
+     */
     public boolean connect() throws Exception {
         if (getConnection().isConnected())
             return true;
@@ -36,10 +42,20 @@ public class TcpModbusSocket extends ModbusFunctionFactory {
         return getConnection().isConnected();
     }
 
+    /**
+     * Disconnect gently from ModbusTCP
+     */
     public void disconnect() {
         getConnection().close();
     }
 
+    /**
+     * Execute a modbus request
+     *
+     * @param request you want to execute
+     * @return response of the request
+     * @throws Exception if something goes wrong while executing
+     */
     protected synchronized ModbusResponse execute(ModbusRequest request) throws Exception {
         if (!connect())
             throw new ModbusIOException(
@@ -53,6 +69,11 @@ public class TcpModbusSocket extends ModbusFunctionFactory {
         return trans.getResponse();
     }
 
+    /**
+     * Get the currently active connection
+     *
+     * @return the connection object
+     */
     protected TCPMasterConnection getConnection() {
         return this.oConnection;
     }

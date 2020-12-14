@@ -12,7 +12,7 @@ import de.tub.sense.daq.old.address.data.*;
 import de.tub.sense.daq.old.common.AbstractModbusTcpEndpointAddress;
 import de.tub.sense.daq.old.common.IModbusTcpEndpoint;
 import de.tub.sense.daq.old.exception.ModbusTcpCommunicationException;
-import de.tub.sense.daq.modbus.protocols.TcpModbusSocket;
+import de.tub.sense.daq.modbus.TcpModbusSocket;
 import org.slf4j.Logger;
 
 import java.io.IOException;

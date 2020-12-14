@@ -1,7 +1,7 @@
 package de.tub.sense.daq.old.address.command;
 
 import de.tub.sense.daq.old.address.data.IModbusTcpTagHardwareAddress;
-import de.tub.sense.daq.modbus.protocols.ModbusFunctionFactory;
+import de.tub.sense.daq.modbus.ModbusFunctionFactory;
 
 import java.util.Objects;
 

@@ -1,8 +1,7 @@
 package de.tub.sense.daq.config;
 
-import de.tub.sense.daq.config.file.DAQConfiguration;
+import de.tub.sense.daq.config.file.ConfigurationFile;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;
@@ -22,13 +21,16 @@ import java.io.InputStream;
 public class ConfigurationParser {
 
     private InputStream daqConfigFileStream;
-    private DAQConfiguration daqConfiguration;
+    private ConfigurationFile configurationFile;
 
     public ConfigurationParser() {
         loadFile();
     }
 
 
+    /**
+     * Load the demo config file from classpath
+     */
     private void loadFile() {
         //Just for development, later file is fetched from server
         try {
@@ -39,16 +41,24 @@ public class ConfigurationParser {
         parseConfiguration();
     }
 
+    /**
+     * Parse the configuration file to ConfigurationFile object
+     */
     private void parseConfiguration() {
-        Yaml yaml = new Yaml(new Constructor(DAQConfiguration.class));
-        daqConfiguration = yaml.load(daqConfigFileStream);
+        Yaml yaml = new Yaml(new Constructor(ConfigurationFile.class));
+        configurationFile = yaml.load(daqConfigFileStream);
     }
 
-    public DAQConfiguration getDaqConfiguration() {
-        if (daqConfiguration == null) {
+    /**
+     * Get the loaded ConfigurationFile object
+     *
+     * @return the configuration
+     */
+    public ConfigurationFile getConfigurationFile() {
+        if (configurationFile == null) {
             parseConfiguration();
         }
-        return this.daqConfiguration;
+        return this.configurationFile;
     }
 
 

@@ -1,6 +1,7 @@
-package de.tub.sense.daq.module;
+package de.tub.sense.daq.modbus;
 
 import cern.c2mon.client.core.service.TagService;
+import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,6 +20,6 @@ public class ModbusTagService {
     }
 
     public static void createTag(String equipment, String tag, Class c, String address) {
-
+        ModbusRequest request;
     }
 }
