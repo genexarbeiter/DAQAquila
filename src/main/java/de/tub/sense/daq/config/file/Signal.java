@@ -21,4 +21,6 @@ public class Signal {
     private Modbus modbus;
     private long min;
     private long max;
+    private double offset;
+    private double multiplier;
 }

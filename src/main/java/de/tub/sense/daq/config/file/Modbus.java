@@ -1,6 +1,5 @@
 package de.tub.sense.daq.config.file;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -19,5 +18,6 @@ public class Modbus {
     private String type;
     private String register;
     private long startAddress;
+    private int count;
 
 }

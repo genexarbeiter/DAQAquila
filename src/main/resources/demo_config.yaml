@@ -1,8 +1,8 @@
 # settings for the modbus device
 modbusSettings: # required
-  address: 127.0.0.1 # required
-  port: 5020 # required
-  unitID: 10 # optional but required? for load simulator device
+  address: 172.16.0.81 # required
+  port: 502 # required
+  unitID: 1 # optional but required? for load simulator device
 
 # settings for the c2mon connection
 c2monSettings: # required
@@ -33,6 +33,8 @@ signals: # required
 - name: SW_GrafcetState # required
   min: 0
   max: 4294967296
+  offset: 0.0 #default 0
+  multiplier: 1.0 #default 1
   type: s64 # optional, data type defined by SourceDataType enum
   description: STATUS WORD INPUT # optional
   modbus: # required

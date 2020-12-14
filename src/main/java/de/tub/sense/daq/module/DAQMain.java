@@ -1,7 +1,5 @@
 package de.tub.sense.daq.module;
 
-import cern.c2mon.client.core.C2monServiceGateway;
-import cern.c2mon.daq.common.DriverKernel;
 import cern.c2mon.daq.config.DaqCoreModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.Banner;
@@ -31,11 +29,10 @@ public class DAQMain {
 
     private static SpringApplication application = null;
     private static ConfigurableApplicationContext context = null;
-    private static DriverKernel driverKernel;
 
     public static void main(String[] args) throws Exception {
         //Set environmental variables
-        System.setProperty("c2mon.daq.name", "TESTDAQ");
+        System.setProperty("c2mon.daq.name", "P_CINERGIA_EL20_81_AC");
         System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:30203");
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:30203");
 
@@ -69,45 +66,17 @@ public class DAQMain {
 
     /**
      * Start a new DAQ application
+     *
      * @param args from main method
      * @throws IOException on exception
      */
     public static synchronized void start(String[] args) throws IOException {
-        String daqName = System.getProperty("c2mon.daq.name");
-        /*if (daqName == null) {
-            throw new RuntimeException("Please specify the DAQ process name using 'c2mon.daq.name'");
-        } else {
-
-            if (application == null) {
-                application = (new SpringApplicationBuilder(DAQMain.class)).bannerMode(Banner.Mode.OFF).build();
-            }
-
-            context = application.run(args);
-            driverKernel = context.getBean(DriverKernel.class);
-            driverKernel.init();
-            context.registerShutdownHook();
-            log.info("DAQ core is now initialized");
-        }*/
-        C2monServiceGateway.startC2monClient();
-    }
-
-    /**
-     * Stop the DAQ process gently
-     */
-    public static synchronized void stop() {
-        try {
-            log.info("Stopping DAQ process...");
-            if (driverKernel != null) {
-                driverKernel.shutdown();
-            }
-
-            if (context.isRunning()) {
-                context.close();
-            }
-        } catch (Exception e) {
-            log.error("Error occurred whilst gradually stopping DAQ process", e);
+        if (application == null) {
+            application = (new SpringApplicationBuilder(DAQMain.class)).bannerMode(Banner.Mode.OFF).build();
         }
 
+        context = application.run(args);
+        log.info("DAQ core is now initialized");
     }
 
 

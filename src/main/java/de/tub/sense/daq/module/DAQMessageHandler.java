@@ -2,6 +2,7 @@ package de.tub.sense.daq.module;
 
 import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
+import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import de.tub.sense.daq.config.DAQConfiguration;
 import de.tub.sense.daq.modbus.TcpModbusSocket;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +36,15 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements Comman
         String host = configuration.getConfiguration().getModbusSettings().getAddress();
         int port = configuration.getConfiguration().getModbusSettings().getPort();
         int unitId = configuration.getConfiguration().getModbusSettings().getUnitID();
+
+
         try {
             tcpModbusSocket = new TcpModbusSocket(host, port, unitId);
             tcpModbusSocket.connect();
+            log.info("Connection established with modbus host {} port {} and unitId {}", host, port, unitId);
+
+            ReadMultipleRegistersResponse response = tcpModbusSocket.readHoldingRegisters(23094, 2);
+            System.out.println(response.getRegisterValue(0) + " " + response.getRegisterValue(1));
         } catch (Exception e) {
             log.error("Connection to modbus datasource with address {}:{} and unit id {} failed with exception message {}.", host, port, unitId, e.getMessage());
         }
