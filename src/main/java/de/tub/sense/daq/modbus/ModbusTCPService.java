@@ -10,9 +10,8 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.util.Optional;
 
 /**
  * @author maxmeyer
@@ -26,15 +25,15 @@ public class ModbusTCPService {
 
     private final DAQConfiguration daqConfiguration;
     private TcpModbusSocket tcpModbusSocket;
-    private HashMap<Long, String> dataTags;
 
     public ModbusTCPService(DAQConfiguration daqConfiguration) {
         this.daqConfiguration = daqConfiguration;
-        dataTags = new HashMap<>();
     }
 
-    @PostConstruct
-    private void init() {
+    /**
+     * Establish the connection to the ModbusTCPEndpoint. If it fails, it logs the exception.
+     */
+    public void connect() {
         try {
             ModbusSettings modbusSettings = daqConfiguration.getConfiguration().getModbusSettings();
             tcpModbusSocket = new TcpModbusSocket(modbusSettings.getAddress(), modbusSettings.getPort(), modbusSettings.getUnitID());
@@ -46,7 +45,67 @@ public class ModbusTCPService {
         }
     }
 
-    public Object parseHoldingResponse(@NonNull ReadMultipleRegistersResponse response, String dataType) {
+    public Optional<Object> getValue(long dataTagId) {
+        /*if (!dataTags.containsKey(dataTagId)) {
+            log.error("No data tag found with dataTagId {}", dataTagId);
+            return Optional.empty();
+        }*/
+        String tagName = ""; //dataTags.get(dataTagId);
+        Signal signal = getSignalFromTagName(tagName).orElseThrow(
+                () -> new RuntimeException("No signal found with tag name " + tagName)
+        );
+        Modbus modbus = signal.getModbus();
+        switch (modbus.getType()) {
+            case "holding":
+                try {
+                    return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(modbus.getStartAddress(),
+                            modbus.getCount()), signal.getType()));
+                } catch (Exception e) {
+                    log.warn("Could not read holding register with tagName " + tagName, e);
+                    return Optional.empty();
+                }
+            case "coil":
+                try {
+                    return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(modbus.getStartAddress(), modbus.getCount())));
+                } catch (Exception e) {
+                    log.warn("Could not read coil register with tagName " + tagName, e);
+                    return Optional.empty();
+                }
+            /*
+            case "input":
+                    try {
+                        ReadInputRegistersResponse response = tcpModbusSocket.readInputRegisters(modbus.getStartAddress(), modbus.getCount());
+                    } catch (Exception e) {
+                        log.warn("Could not read input register with tagName " + tagName, e);
+                    }
+                case "discrete":
+                    try {
+                        ReadInputDiscretesResponse response = tcpModbusSocket.readDiscreteInputs(modbus.getStartAddress(), modbus.getCount());
+                    } catch (Exception e) {
+                        log.warn("Could not read discrete input register with tagName " + tagName, e);
+                    }
+                 */
+            default:
+                log.warn("Modbus type {} not valid.", modbus.getType());
+                return Optional.empty();
+        }
+    }
+
+    public void disconnect() {
+        tcpModbusSocket.disconnect();
+    }
+
+    private Optional<Signal> getSignalFromTagName(String tagName) {
+        for (Signal signal : daqConfiguration.getConfiguration().getSignals()) {
+            if (signal.getName().equals(tagName)) {
+                return Optional.of(signal);
+            }
+        }
+        log.warn("No signal found with tag name {}.", tagName);
+        return Optional.empty();
+    }
+
+    private Object parseHoldingResponse(ReadMultipleRegistersResponse response, String dataType) {
         final Integer[] respValues = new Integer[response.getByteCount()];
         final ByteBuffer bb = ByteBuffer.allocate(2 * response.getByteCount());
         for (int i = 0; i < response.getByteCount(); i++) {
@@ -76,7 +135,7 @@ public class ModbusTCPService {
         }
     }
 
-    public Object parseCoilResponse(@NonNull ReadCoilsResponse response) {
+    private Object parseCoilResponse(@NonNull ReadCoilsResponse response) {
         if (response.getBitCount() == 1) {
             return response.getCoilStatus(0);
         } else {
@@ -86,63 +145,5 @@ public class ModbusTCPService {
             }
             return respValues;
         }
-    }
-
-    public Object getValue(long dataTagId) {
-        if (dataTags.containsKey(dataTagId)) {
-            String tagName = dataTags.get(dataTagId);
-            Signal signal = getSignalFromTagName(tagName);
-            if (signal == null) {
-                log.error("No signal found with tag name " + tagName);
-                return null;
-            }
-            Modbus modbus = signal.getModbus();
-            switch (modbus.getType()) {
-                case "holding":
-                    try {
-                        return parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(modbus.getStartAddress(),
-                                modbus.getCount()), signal.getType());
-                    } catch (Exception e) {
-                        log.warn("Could not read holding register with tagName " + tagName, e);
-                    }
-                    break;
-                case "coil":
-                    try {
-                        return parseCoilResponse(tcpModbusSocket.readCoils(modbus.getStartAddress(), modbus.getCount()));
-                    } catch (Exception e) {
-                        log.warn("Could not read coil register with tagName " + tagName, e);
-                    }
-                    break;
-                /*case "input":
-                    try {
-                        ReadInputRegistersResponse response = tcpModbusSocket.readInputRegisters(modbus.getStartAddress(), modbus.getCount());
-                    } catch (Exception e) {
-                        log.warn("Could not read input register with tagName " + tagName, e);
-                    }
-                case "discrete":
-                    try {
-                        ReadInputDiscretesResponse response = tcpModbusSocket.readDiscreteInputs(modbus.getStartAddress(), modbus.getCount());
-                    } catch (Exception e) {
-                        log.warn("Could not read discrete input register with tagName " + tagName, e);
-                    }
-
-                 */
-            }
-        }
-        return null;
-    }
-
-    public void disconnect() {
-        tcpModbusSocket.disconnect();
-    }
-
-    private Signal getSignalFromTagName(String tagName) {
-        for (Signal signal : daqConfiguration.getConfiguration().getSignals()) {
-            if (signal.getName().equals(tagName)) {
-                return signal;
-            }
-        }
-        log.warn("No signal found with tag name {}.", tagName);
-        return null;
     }
 }

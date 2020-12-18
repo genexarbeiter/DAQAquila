@@ -1,7 +1,6 @@
 package de.tub.sense.daq.config;
 
 import de.tub.sense.daq.config.file.ConfigurationFile;
-import de.tub.sense.daq.config.file.ModelSettings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -61,5 +60,7 @@ public class ConfigurationParser {
         }
         return this.configurationFile;
     }
+
+
 
 }

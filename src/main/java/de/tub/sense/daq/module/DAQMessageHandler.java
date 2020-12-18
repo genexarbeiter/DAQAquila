@@ -4,10 +4,12 @@ import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.common.IEquipmentMessageSender;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
 import cern.c2mon.shared.common.datatag.ValueUpdate;
-import de.tub.sense.daq.config.DAQConfiguration;
+import de.tub.sense.daq.config.ProcessConfigurationParser;
 import de.tub.sense.daq.modbus.ModbusTCPService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
 
 /**
  * @author maxmeyer
@@ -20,9 +22,15 @@ import org.springframework.stereotype.Service;
 public class DAQMessageHandler extends EquipmentMessageHandler {
 
     private final ModbusTCPService modbusTCPService;
+    private final C2monService c2monService;
+    private final ProcessConfigurationParser processConfigurationParser;
+    private HashMap<Long, String> dataTags;
 
-    public DAQMessageHandler(DAQConfiguration configuration, ModbusTCPService modbusTCPService) {
+    public DAQMessageHandler(ModbusTCPService modbusTCPService, C2monService c2monService, ProcessConfigurationParser processConfigurationParser) {
         this.modbusTCPService = modbusTCPService;
+        this.c2monService = c2monService;
+        this.processConfigurationParser = processConfigurationParser;
+        dataTags = new HashMap<>();
         connectToDataSource();
     }
 
@@ -34,6 +42,11 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     @Override
     public void connectToDataSource() {
         log.info("Connecting to datasource...");
+        modbusTCPService.connect();
+        StringBuilder sb = new StringBuilder("Active Processes: ");
+        c2monService.getAllProcesses().forEach(processName -> sb.append(processName + " "));
+        log.info(sb.toString());
+        processConfigurationParser.parseXML(c2monService.getProcessConfigurationFor("P_CINERGIA_EL20_82_AC"));
     }
 
     /**
@@ -70,4 +83,6 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         IEquipmentMessageSender sender = getEquipmentMessageSender();
         sender.confirmEquipmentStateOK();
     }
+
+
 }

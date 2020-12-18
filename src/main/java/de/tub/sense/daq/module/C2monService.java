@@ -5,13 +5,14 @@ import cern.c2mon.client.core.service.ConfigurationService;
 import cern.c2mon.client.core.service.TagService;
 import cern.c2mon.shared.client.configuration.ConfigurationReport;
 import cern.c2mon.shared.client.configuration.api.equipment.Equipment;
-import cern.c2mon.shared.client.configuration.api.process.Process;
 import cern.c2mon.shared.client.configuration.api.tag.AliveTag;
 import cern.c2mon.shared.client.configuration.api.tag.StatusTag;
 import cern.c2mon.shared.common.datatag.DataTagAddress;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 /**
  * @author maxmeyer
@@ -63,7 +64,6 @@ public class C2monService {
                 .aliveTag(AliveTag.create(equipmentName + ":ALIVE").build(), aliveTagInterval)
                 .statusTag(StatusTag.create(equipmentName + ":STATUS").build())
                 .build();
-
         configurationService.createEquipment(processName, equipmentToCreate);
     }
 
@@ -88,6 +88,7 @@ public class C2monService {
      * @return XML configuration as String
      */
     public String getProcessConfigurationFor(@NonNull String processName) {
+        System.out.println(configurationService.getProcessXml(processName));
         return configurationService.getProcessXml(processName);
     }
 
@@ -103,6 +104,12 @@ public class C2monService {
 
     public void updateTag(long tagId, Object value) {
 
+    }
+
+    public ArrayList<String> getAllProcesses() {
+        ArrayList<String> processes = new ArrayList<>();
+        configurationService.getProcessNames().forEach(processNameResponse -> processes.add(processNameResponse.getProcessName()));
+        return processes;
     }
 
     private Class<?> dataTypeClass(String datatype) {
