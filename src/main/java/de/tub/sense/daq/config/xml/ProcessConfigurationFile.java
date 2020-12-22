@@ -15,10 +15,10 @@ import java.util.ArrayList;
 @Getter
 @Setter
 @ToString
-public class ProcessConfiguration {
+public class ProcessConfigurationFile {
 
     private String name;
-    private String processId;
+    private long processId;
     private String type;
     private String aliveTagId;
     private String aliveTagInterval;

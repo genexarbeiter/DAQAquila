@@ -17,7 +17,7 @@ import java.util.HashMap;
 @Setter
 @ToString
 public class Tag {
-    private String id;
+    private long id;
     private String name;
     private HardwareAddress address;
 }

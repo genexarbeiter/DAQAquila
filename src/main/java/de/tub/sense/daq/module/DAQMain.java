@@ -1,5 +1,6 @@
 package de.tub.sense.daq.module;
 
+import cern.c2mon.daq.common.DriverKernel;
 import cern.c2mon.daq.config.DaqCoreModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.Banner;
@@ -32,10 +33,10 @@ public class DAQMain {
 
     public static void main(String[] args) throws Exception {
         //Set environmental variables
-        System.setProperty("c2mon.daq.name", "P_CINERGIA_EL20_81_AC");
+        System.setProperty("c2mon.daq.name", "P_CINERGIA_EL_20_DEV6");
         System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:30203");
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:30203");
-
+        System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:30203");
         //Debug
         System.setProperty("local.server.port", "30203");
         System.setProperty("server.address", "192.168.111.77");
@@ -76,6 +77,8 @@ public class DAQMain {
         }
 
         context = application.run(args);
+        DriverKernel driverKernel = (DriverKernel)context.getBean(DriverKernel.class);
+        driverKernel.init();
         log.info("DAQ core is now initialized");
     }
 

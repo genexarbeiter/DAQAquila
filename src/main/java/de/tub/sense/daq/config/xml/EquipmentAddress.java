@@ -16,8 +16,8 @@ import lombok.ToString;
 public class EquipmentAddress {
 
     private String host;
-    private String port;
-    private String unitId;
-    private String delay;
+    private int port;
+    private int unitId;
+    private int delay;
     private String timeUnit;
 }

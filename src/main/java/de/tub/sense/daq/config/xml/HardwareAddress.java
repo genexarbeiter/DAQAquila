@@ -15,9 +15,9 @@ import lombok.ToString;
 @ToString
 public class HardwareAddress {
 
-    private String startAddress;
-    private String valueCount;
+    private int startAddress;
+    private int valueCount;
     private String type;
-    private String minValue;
-    private String maxValue;
+    private double minValue;
+    private double maxValue;
 }
