@@ -24,6 +24,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.11.1" level="project" />
     <orderEntry type="library" name="Maven: cern.c2mon.daq:c2mon-daq-core:1.9.8" level="project" />
     <orderEntry type="library" name="Maven: cern.c2mon.shared:c2mon-shared-daq:1.9.8" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-core:5.1.2.RELEASE" level="project" />
