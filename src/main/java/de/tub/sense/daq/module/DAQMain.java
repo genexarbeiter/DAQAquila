@@ -2,6 +2,7 @@ package de.tub.sense.daq.module;
 
 import cern.c2mon.daq.common.DriverKernel;
 import cern.c2mon.daq.config.DaqCoreModule;
+import de.tub.sense.daq.modbus.ModbusTCPService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
@@ -78,6 +79,7 @@ public class DAQMain {
 
         context = application.run(args);
         DriverKernel driverKernel = (DriverKernel)context.getBean(DriverKernel.class);
+        DAQMessageHandler.setModbusTCPService(context.getBean(ModbusTCPService.class));
         driverKernel.init();
         log.info("DAQ core is now initialized");
     }

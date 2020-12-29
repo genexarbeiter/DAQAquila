@@ -37,7 +37,7 @@ public class TestRunner implements CommandLineRunner {
             c2monService.removeProcessEntirely(processName);
         }
         c2monService.createProcess(processName);
-        c2monService.createEquipment(equipmentName, processName, "de.tub.sense.daq.DAQMessageHandler",
+        c2monService.createEquipment(equipmentName, processName, DAQMessageHandler.class.getName(),
                 daqConfiguration.getConfiguration().getModbusSettings().getAddress(),
                 daqConfiguration.getConfiguration().getModbusSettings().getPort(),
                 daqConfiguration.getConfiguration().getModbusSettings().getUnitID());

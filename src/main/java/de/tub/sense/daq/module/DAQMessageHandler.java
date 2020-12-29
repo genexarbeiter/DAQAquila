@@ -5,7 +5,6 @@ import cern.c2mon.daq.common.IEquipmentMessageSender;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
 import de.tub.sense.daq.modbus.ModbusTCPService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * @author maxmeyer
@@ -16,10 +15,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class DAQMessageHandler extends EquipmentMessageHandler {
 
-    private final ModbusTCPService modbusTCPService;
+    private static ModbusTCPService modbusTCPService;
 
-    public DAQMessageHandler(ModbusTCPService modbusTCPService) {
-        this.modbusTCPService = modbusTCPService;
+    public DAQMessageHandler() {}
+
+    public static void setModbusTCPService(ModbusTCPService modbusTCPService1) {
+        modbusTCPService = modbusTCPService1;
     }
 
     /**
