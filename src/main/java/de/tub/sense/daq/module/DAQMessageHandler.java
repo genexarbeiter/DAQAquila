@@ -3,8 +3,14 @@ package de.tub.sense.daq.module;
 import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.common.IEquipmentMessageSender;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
+import cern.c2mon.shared.common.datatag.ValueUpdate;
 import de.tub.sense.daq.modbus.ModbusTCPService;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @author maxmeyer
@@ -17,7 +23,8 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
 
     private static ModbusTCPService modbusTCPService;
 
-    public DAQMessageHandler() {}
+    public DAQMessageHandler() {
+    }
 
     public static void setModbusTCPService(ModbusTCPService modbusTCPService1) {
         modbusTCPService = modbusTCPService1;
@@ -32,6 +39,28 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     public void connectToDataSource() {
         log.info("Connecting to datasource...");
         modbusTCPService.connect();
+
+        //TODO Get it working
+        new Thread(() -> {
+            ExecutorService threadpool = Executors.newCachedThreadPool();
+            Future futureTask = null;
+            while (true) {
+                try {
+                    Thread.sleep(10000);
+                    if (futureTask != null) {
+                        if (!futureTask.isDone()) {
+                            if (log.isDebugEnabled()) {
+                                log.debug("Skipping refreshing all data tags, operation already running!");
+                            }
+                            continue;
+                        }
+                    }
+                    futureTask = threadpool.submit(this::refreshAllDataTags);
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted exception occurred", e);
+                }
+            }
+        }).start();
     }
 
     /**
@@ -51,9 +80,9 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     @Override
     public void refreshAllDataTags() {
-        log.info("Refreshing all datatags...");
-        //FOR all datatags: refreshDataTag(tagId)
-        log.info("Done");
+        log.info("Refreshing all data tags...");
+        getEquipmentConfiguration().getSourceDataTags().keySet().forEach(this::refreshDataTag);
+        log.info("Refreshed all data tags successful");
     }
 
     /**
@@ -63,9 +92,19 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     @Override
     public void refreshDataTag(long tagId) {
+        if (log.isDebugEnabled()) {
+            log.debug("Refreshing data tag {}...", tagId);
+        }
         IEquipmentMessageSender sender = getEquipmentMessageSender();
         sender.confirmEquipmentStateOK();
+        Optional<Object> value = modbusTCPService.getValue(tagId);
+        if (!value.isPresent()) {
+            log.warn("Failed to read value from tagId {}.", tagId);
+            return;
+        }
+        sender.update(tagId, new ValueUpdate(value.get()));
+        if (log.isDebugEnabled()) {
+            log.debug("Refreshing data tag {} success", tagId);
+        }
     }
-
-
 }

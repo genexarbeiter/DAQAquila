@@ -3,9 +3,12 @@ package de.tub.sense.daq.modbus;
 import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import de.tub.sense.daq.config.DAQConfiguration;
-import de.tub.sense.daq.config.file.Modbus;
+import de.tub.sense.daq.config.ProcessConfiguration;
 import de.tub.sense.daq.config.file.ModbusSettings;
-import de.tub.sense.daq.config.file.Signal;
+import de.tub.sense.daq.config.xml.DataTag;
+import de.tub.sense.daq.config.xml.EquipmentUnit;
+import de.tub.sense.daq.config.xml.HardwareAddress;
+import de.tub.sense.daq.config.xml.Tag;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,10 +27,12 @@ import java.util.Optional;
 public class ModbusTCPService {
 
     private final DAQConfiguration daqConfiguration;
+    private final ProcessConfiguration processConfiguration;
     private TcpModbusSocket tcpModbusSocket;
 
-    public ModbusTCPService(DAQConfiguration daqConfiguration) {
+    public ModbusTCPService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration) {
         this.daqConfiguration = daqConfiguration;
+        this.processConfiguration = processConfiguration;
     }
 
     /**
@@ -45,30 +50,29 @@ public class ModbusTCPService {
         }
     }
 
+    //TODO handle more holding types than just 'holding32' holding32 is most common and therefor used for development
     public Optional<Object> getValue(long dataTagId) {
-        /*if (!dataTags.containsKey(dataTagId)) {
-            log.error("No data tag found with dataTagId {}", dataTagId);
+
+        Optional<Tag> tagOptional = getTagFromTagId(dataTagId);
+        if (!tagOptional.isPresent()) {
             return Optional.empty();
-        }*/
-        String tagName = ""; //dataTags.get(dataTagId);
-        Signal signal = getSignalFromTagName(tagName).orElseThrow(
-                () -> new RuntimeException("No signal found with tag name " + tagName)
-        );
-        Modbus modbus = signal.getModbus();
-        switch (modbus.getType()) {
-            case "holding":
+        }
+        Tag tag = tagOptional.get();
+        HardwareAddress hardwareAddress = tag.getAddress();
+        switch (hardwareAddress.getType()) {
+            case "holding32":
                 try {
-                    return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(modbus.getStartAddress(),
-                            modbus.getCount()), signal.getType()));
+                    return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
+                            hardwareAddress.getValueCount()), ((DataTag) tag).getDataType()));
                 } catch (Exception e) {
-                    log.warn("Could not read holding register with tagName " + tagName, e);
+                    log.warn("Could not read holding register with tagName " + tag.getName(), e);
                     return Optional.empty();
                 }
             case "coil":
                 try {
-                    return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(modbus.getStartAddress(), modbus.getCount())));
+                    return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
                 } catch (Exception e) {
-                    log.warn("Could not read coil register with tagName " + tagName, e);
+                    log.warn("Could not read coil register with tagName " + tag.getName(), e);
                     return Optional.empty();
                 }
             /*
@@ -86,7 +90,7 @@ public class ModbusTCPService {
                     }
                  */
             default:
-                log.warn("Modbus type {} not valid.", modbus.getType());
+                log.warn("Modbus type {} not valid.", hardwareAddress.getType());
                 return Optional.empty();
         }
     }
@@ -95,20 +99,27 @@ public class ModbusTCPService {
         tcpModbusSocket.disconnect();
     }
 
-    private Optional<Signal> getSignalFromTagName(String tagName) {
-        for (Signal signal : daqConfiguration.getConfiguration().getSignals()) {
-            if (signal.getName().equals(tagName)) {
-                return Optional.of(signal);
+    //TODO Possible performance increase, when the Tags are cached
+    private Optional<Tag> getTagFromTagId(long tagId) {
+        for (EquipmentUnit equipmentUnit : processConfiguration.getConfig().getEquipmentUnits()) {
+            for (Tag tag : equipmentUnit.getDataTags()) {
+                if (tag.getId() == tagId) {
+                    return Optional.of(tag);
+                }
+            }
+            for (Tag tag : equipmentUnit.getCommandTags()) {
+                if (tag.getId() == tagId) {
+                    return Optional.of(tag);
+                }
             }
         }
-        log.warn("No signal found with tag name {}.", tagName);
         return Optional.empty();
     }
 
     private Object parseHoldingResponse(ReadMultipleRegistersResponse response, String dataType) {
         final Integer[] respValues = new Integer[response.getByteCount()];
         final ByteBuffer bb = ByteBuffer.allocate(2 * response.getByteCount());
-        for (int i = 0; i < response.getByteCount(); i++) {
+        for (int i = 0; i < response.getWordCount(); i++) {
             respValues[i] = response.getRegisterValue(i);
             bb.putShort(respValues[i].shortValue());
         }
@@ -124,7 +135,7 @@ public class ModbusTCPService {
             case "s32":
                 return bb.getInt();
             case "s64":
-            case "u64":
+            case "java.lang.Long": //"u64" (switched to XML Config)
                 return bb.getLong();
             case "float32":
                 return bb.getFloat();

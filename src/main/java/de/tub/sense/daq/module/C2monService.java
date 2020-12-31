@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * @author maxmeyer
@@ -201,6 +202,4 @@ public class C2monService {
                 throw new IllegalArgumentException("Datatype " + datatype + " could not be converted to class");
         }
     }
-
-
 }

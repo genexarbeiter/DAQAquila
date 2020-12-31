@@ -30,7 +30,6 @@ import java.io.IOException;
 public class DAQMain {
 
     private static SpringApplication application = null;
-    private static ConfigurableApplicationContext context = null;
 
     public static void main(String[] args) throws Exception {
         //Set environmental variables
@@ -77,8 +76,11 @@ public class DAQMain {
             application = (new SpringApplicationBuilder(DAQMain.class)).bannerMode(Banner.Mode.OFF).build();
         }
 
-        context = application.run(args);
-        DriverKernel driverKernel = (DriverKernel)context.getBean(DriverKernel.class);
+        ConfigurableApplicationContext context = application.run(args);
+        DriverKernel driverKernel = (DriverKernel) context.getBean(DriverKernel.class);
+
+        //Dirty because the MessageHandler has to be instantiated by DriverKernel,
+        // and there is no possibility to use Spring beans directly in the MessageHandler
         DAQMessageHandler.setModbusTCPService(context.getBean(ModbusTCPService.class));
         driverKernel.init();
         log.info("DAQ core is now initialized");

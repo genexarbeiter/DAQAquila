@@ -29,6 +29,7 @@ signals: # required
     type: read # required type can be one of the following words: [read,write]
     register: holding32 # required; read => [holding] write => [holding]
     startAddress: 13000 # required
+    count: 2
 
 - name: SW_GrafcetState # required
   min: 0
@@ -42,7 +43,8 @@ signals: # required
     type: read # required type can be one of the following words: [read,write]
     register: holding32 # required; read => [holding] write => [holding]
     startAddress: 16000 # required
-    bitNumber: 0 #optional, read only a single specified bit
+    count: 2
+    #bitNumber: 0 #optional, read only a single specified bit
 
 - name: Test # required
   type: s64 # optional, data type defined by SourceDataType enum
@@ -51,3 +53,4 @@ signals: # required
     type: read # required type can be one of the following words: [read,write]
     register: holding32 # required; read => [holding] write => [holding]
     startAddress: 13000 # required
+    count: 2
