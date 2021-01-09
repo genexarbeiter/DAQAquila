@@ -5,14 +5,12 @@ import cern.c2mon.daq.common.IEquipmentMessageSender;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
 import cern.c2mon.shared.common.command.ISourceCommandTag;
 import cern.c2mon.shared.common.datatag.ISourceDataTag;
-import cern.c2mon.shared.common.datatag.SourceDataTagQuality;
 import cern.c2mon.shared.common.datatag.ValueUpdate;
-import cern.c2mon.shared.common.process.EquipmentConfiguration;
 import cern.c2mon.shared.common.process.IEquipmentConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.tub.sense.daq.config.xml.EquipmentAddress;
 import de.tub.sense.daq.config.xml.HardwareAddress;
-import de.tub.sense.daq.config.xml.ProcessConfigurationFile;
 import de.tub.sense.daq.modbus.ModbusTCPService;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
@@ -26,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,17 +36,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DAQMessageHandler extends EquipmentMessageHandler {
 
-    private static ModbusTCPService modbusTCPService;
+    IEquipmentMessageSender equipmentMessageSender;
     private boolean autoRefreshRunning = false;
     private IEquipmentConfiguration equipmentConfiguration;
-    IEquipmentMessageSender equipmentMessageSender;
+    private ModbusTCPService modbusTCPService;
 
 
     public DAQMessageHandler() {
-    }
-
-    public static void setModbusTCPService(ModbusTCPService modbusTCPService1) {
-        modbusTCPService = modbusTCPService1;
     }
 
     /**
@@ -59,9 +54,10 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     public void connectToDataSource() {
         log.info("Connecting to datasource...");
         equipmentConfiguration = getEquipmentConfiguration();
-        equipmentMessageSender= getEquipmentMessageSender();
+        equipmentMessageSender = getEquipmentMessageSender();
         EquipmentAddress equipmentAddress = parseEquipmentAddress(
                 equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new);
+        modbusTCPService = new ModbusTCPService();
         modbusTCPService.connect(equipmentAddress.getHost(), equipmentAddress.getPort(), equipmentAddress.getUnitId());
     }
 
@@ -79,24 +75,16 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
 
     /**
      * Publish the latest value of all tags on request.
+     * Starts if not already started a thread which schedules this function at a fixed rate
      */
     @Override
     public void refreshAllDataTags() {
         log.info("Refreshing all data tags...");
         equipmentConfiguration.getSourceDataTags().keySet().forEach(this::refreshDataTag);
-        if (!autoRefreshRunning) {
-            log.debug("Enabling auto refresh...");
-            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-                try {
-                    autoRefreshRunning = true;
-                    refreshAllDataTags();
-                } catch (Exception e) {
-                    log.error("Error sending tag update", e);
-                }
-            }, 5, 5, TimeUnit.SECONDS);
-            log.debug("Enabled");
-        }
         log.info("Refreshed all data tags successful");
+        if (!autoRefreshRunning) {
+            startAutoRefresh();
+        }
     }
 
     /**
@@ -112,42 +100,45 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         equipmentMessageSender.confirmEquipmentStateOK();
         ISourceDataTag dataTag = equipmentConfiguration.getSourceDataTag(tagId);
         ISourceCommandTag commandTag = equipmentConfiguration.getSourceCommandTag(tagId);
-        HardwareAddress hardwareAddress;
-        if(dataTag != null) {
-            hardwareAddress = parseHardwareAddress(
-                    dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
-            log.debug("Getting value from modbus tcp service...");
-            Optional<Object> value = modbusTCPService.getValue(tagId, hardwareAddress, dataTag.getDataType());
-            if (!value.isPresent()) {
-                log.warn("Failed to read value from tagId {}", tagId);
-                return;
-            }
-            try {
-                if (!equipmentMessageSender.update(tagId, new ValueUpdate(value.get()))) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Failed to refresh data tag {}", tagId);
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Could not send value update", e);
-            }
-        } else if(commandTag != null){
-            hardwareAddress = parseHardwareAddress(
-                    commandTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
-            //TODO Handle CommandTag
-        } else {
-            log.warn("Failed to load source tag from address");
+        HardwareAddress hardwareAddress = parseHardwareAddress(
+                dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
+
+        log.debug("Retrieving tag value from modbus tcp service...");
+        Optional<Object> value = modbusTCPService.getValue(tagId, hardwareAddress, dataTag.getDataType());
+
+        if (!value.isPresent()) {
+            log.warn("Failed to read value from tagId {}, skipping update", tagId);
             return;
+        }
+
+        try {
+            equipmentMessageSender.update(tagId, new ValueUpdate(value.get()));
+        } catch (Exception e) {
+            log.error("Could not send value update", e);
         }
         if (log.isDebugEnabled()) {
             log.debug("Refreshing data tag {} success", tagId);
         }
     }
 
+    /**
+     * Starts a new thread called refresh-thread, which automatically calls the method refreshAllDataTags() in a specific
+     * interval. The method scheduleAtFixedRate() is the way to go, as its not scheduling the next task until the previous
+     * is done.
+     */
+    private void startAutoRefresh() {
+        log.debug("Enabling auto refresh...");
+        ThreadFactory namedThreadFactory =
+                new ThreadFactoryBuilder().setNameFormat("refresh-thread").build();
+        Executors.newScheduledThreadPool(1, namedThreadFactory).scheduleAtFixedRate(() -> {
+            autoRefreshRunning = true;
+            refreshAllDataTags();
+        }, 10, 10, TimeUnit.SECONDS);
+    }
+
+
+    //TODO Put parsing somewhere else
     private Optional<EquipmentAddress> parseEquipmentAddress(String address) {
-        if (log.isDebugEnabled()) {
-            log.debug("Parsing equipment address {}", address);
-        }
         EquipmentAddress equipmentAddress = new EquipmentAddress();
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -181,7 +172,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         }
     }
 
-    public Optional<HardwareAddress> parseHardwareAddress(String xmlAddress) {
+    private Optional<HardwareAddress> parseHardwareAddress(String xmlAddress) {
         String address = parseXMLHardwareAddress(xmlAddress).orElseThrow(RuntimeException::new);
         HardwareAddress hardwareAddress = new HardwareAddress();
         ObjectMapper mapper = new ObjectMapper();
@@ -217,10 +208,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         }
     }
 
-    private Optional<String> parseXMLHardwareAddress (String xml) {
-        if (log.isDebugEnabled()) {
-            log.debug("Parsing XML hardware address from C2mon");
-        }
+    private Optional<String> parseXMLHardwareAddress(String xml) {
         Document document = convertStringToXMLDocument(xml).orElseThrow(() -> new RuntimeException("Failed parsing xml string."));
         return Optional.of(document.getElementsByTagName("address").item(0).getTextContent());
     }

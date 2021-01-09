@@ -1,15 +1,12 @@
 package de.tub.sense.daq.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tub.sense.daq.config.xml.EquipmentAddress;
 import de.tub.sense.daq.config.xml.EquipmentUnit;
 import de.tub.sense.daq.config.xml.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -28,6 +25,10 @@ public class DAQConfigurationService {
     public DAQConfigurationService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration) {
         this.daqConfiguration = daqConfiguration;
         this.processConfiguration = processConfiguration;
+    }
+
+    public ArrayList<EquipmentUnit> getEquipmentUnits() {
+        return processConfiguration.getConfig().getEquipmentUnits();
     }
 
     //TODO Possible performance increase, when the Tags are cached
@@ -57,5 +58,4 @@ public class DAQConfigurationService {
         log.warn("Equipment with equipmentId {} not found", equipmentId);
         return Optional.empty();
     }
-
 }

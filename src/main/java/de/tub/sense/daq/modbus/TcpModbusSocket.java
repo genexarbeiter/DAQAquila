@@ -5,7 +5,6 @@ import com.ghgande.j2mod.modbus.io.ModbusTransaction;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
-import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -14,17 +13,17 @@ public class TcpModbusSocket extends ModbusFunctionFactory {
 
     private final TCPMasterConnection oConnection;
 
-    private final Integer oUnitID;
+    private final int oUnitID;
 
     public TcpModbusSocket(String host) throws UnknownHostException {
-        this(host, null);
+        this(host, 0);
     }
 
-    public TcpModbusSocket(String host, Integer unitID) throws UnknownHostException {
+    public TcpModbusSocket(String host, int unitID) throws UnknownHostException {
         this(host, 502, unitID);
     }
 
-    public TcpModbusSocket(String host, int port, Integer unitID) throws UnknownHostException {
+    public TcpModbusSocket(String host, int port, int unitID) throws UnknownHostException {
         this.oConnection = new TCPMasterConnection(InetAddress.getByName(host));
         getConnection().setPort(port);
         this.oUnitID = unitID;
@@ -63,8 +62,7 @@ public class TcpModbusSocket extends ModbusFunctionFactory {
                     "Connection failed [" + getConnection().getAddress().toString() + ":" + getConnection().getPort() +
                             "]");
         ModbusTransaction trans = getConnection().getModbusTransport().createTransaction();
-        if (this.oUnitID != null && this.oUnitID > 0)
-            request.setUnitID(this.oUnitID);
+        if (this.oUnitID > 0) request.setUnitID(this.oUnitID);
         trans.setRequest(request);
         trans.execute();
         return trans.getResponse();

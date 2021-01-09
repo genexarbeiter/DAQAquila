@@ -3,9 +3,9 @@ package de.tub.sense.daq.modbus;
 import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import de.tub.sense.daq.config.xml.HardwareAddress;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -17,13 +17,10 @@ import java.util.Optional;
  */
 
 @Slf4j
-@Service
+@NoArgsConstructor
 public class ModbusTCPService {
 
     private TcpModbusSocket tcpModbusSocket;
-
-    public ModbusTCPService() {
-    }
 
     /**
      * Establish the connection to the ModbusTCPEndpoint. If it fails, it logs the exception.
@@ -81,6 +78,13 @@ public class ModbusTCPService {
         tcpModbusSocket.disconnect();
     }
 
+    /**
+     * Parse a holding register response to a object of the given data type
+     *
+     * @param response to parse
+     * @param dataType expected from the response
+     * @return object instance of the given data type parsed from the holding register response
+     */
     private Object parseHoldingResponse(ReadMultipleRegistersResponse response, String dataType) {
         final Integer[] respValues = new Integer[response.getByteCount()];
         final ByteBuffer bb = ByteBuffer.allocate(2 * response.getByteCount());
@@ -111,6 +115,12 @@ public class ModbusTCPService {
         }
     }
 
+    /**
+     * Parses a coil response to a single boolean or a boolean array
+     *
+     * @param response to parse
+     * @return single boolean or boolean array depending on the response
+     */
     private Object parseCoilResponse(@NonNull ReadCoilsResponse response) {
         if (response.getBitCount() == 1) {
             return response.getCoilStatus(0);

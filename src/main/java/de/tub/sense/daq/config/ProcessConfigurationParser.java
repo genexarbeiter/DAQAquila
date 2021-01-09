@@ -54,9 +54,6 @@ public class ProcessConfigurationParser {
     }
 
     private ProcessConfigurationFile parseXML(String xml) {
-        if(log.isDebugEnabled()) {
-            log.debug("Parsing XML configuration from C2mon");
-        }
         Document document = convertStringToXMLDocument(xml).orElseThrow(() -> new RuntimeException("Failed parsing xml string."));
         ProcessConfigurationFile processConfigurationFile = new ProcessConfigurationFile();
 
