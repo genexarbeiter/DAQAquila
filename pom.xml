@@ -6,7 +6,7 @@
     <parent>
         <artifactId>c2mon-daq-parent</artifactId>
         <groupId>cern.c2mon.daq</groupId>
-        <version>1.9.8</version>
+        <version>1.10.0</version>
     </parent>
 
     <groupId>de.tub.sense.daq.config</groupId>

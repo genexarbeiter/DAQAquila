@@ -2,13 +2,7 @@ package de.tub.sense.daq.modbus;
 
 import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
-import de.tub.sense.daq.config.DAQConfiguration;
-import de.tub.sense.daq.config.ProcessConfiguration;
-import de.tub.sense.daq.config.file.ModbusSettings;
-import de.tub.sense.daq.config.xml.DataTag;
-import de.tub.sense.daq.config.xml.EquipmentUnit;
 import de.tub.sense.daq.config.xml.HardwareAddress;
-import de.tub.sense.daq.config.xml.Tag;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,53 +20,41 @@ import java.util.Optional;
 @Service
 public class ModbusTCPService {
 
-    private final DAQConfiguration daqConfiguration;
-    private final ProcessConfiguration processConfiguration;
     private TcpModbusSocket tcpModbusSocket;
 
-    public ModbusTCPService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration) {
-        this.daqConfiguration = daqConfiguration;
-        this.processConfiguration = processConfiguration;
+    public ModbusTCPService() {
     }
 
     /**
      * Establish the connection to the ModbusTCPEndpoint. If it fails, it logs the exception.
      */
-    public void connect() {
+    public void connect(String host, int port, int unitId) {
         try {
-            ModbusSettings modbusSettings = daqConfiguration.getConfiguration().getModbusSettings();
-            tcpModbusSocket = new TcpModbusSocket(modbusSettings.getAddress(), modbusSettings.getPort(), modbusSettings.getUnitID());
+            tcpModbusSocket = new TcpModbusSocket(host, port, unitId);
             tcpModbusSocket.connect();
             log.info("Connection established with modbus host {} port {} and unitId {}",
-                    modbusSettings.getAddress(), modbusSettings.getPort(), modbusSettings.getUnitID());
+                    host, port, unitId);
         } catch (Exception e) {
             log.warn("Failed to initialize modbus tcp connection.", e);
         }
     }
 
     //TODO handle more holding types than just 'holding32' holding32 is most common and therefor used for development
-    public Optional<Object> getValue(long dataTagId) {
-
-        Optional<Tag> tagOptional = getTagFromTagId(dataTagId);
-        if (!tagOptional.isPresent()) {
-            return Optional.empty();
-        }
-        Tag tag = tagOptional.get();
-        HardwareAddress hardwareAddress = tag.getAddress();
+    public Optional<Object> getValue(long dataTagId, HardwareAddress hardwareAddress, String dataType) {
         switch (hardwareAddress.getType()) {
             case "holding32":
                 try {
                     return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
-                            hardwareAddress.getValueCount()), ((DataTag) tag).getDataType()));
+                            hardwareAddress.getValueCount()), dataType));
                 } catch (Exception e) {
-                    log.warn("Could not read holding register with tagName " + tag.getName(), e);
+                    log.warn("Could not read holding register with tagId " + dataTagId, e);
                     return Optional.empty();
                 }
             case "coil":
                 try {
                     return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
                 } catch (Exception e) {
-                    log.warn("Could not read coil register with tagName " + tag.getName(), e);
+                    log.warn("Could not read coil register with tagName " + dataTagId, e);
                     return Optional.empty();
                 }
             /*
@@ -97,23 +79,6 @@ public class ModbusTCPService {
 
     public void disconnect() {
         tcpModbusSocket.disconnect();
-    }
-
-    //TODO Possible performance increase, when the Tags are cached
-    private Optional<Tag> getTagFromTagId(long tagId) {
-        for (EquipmentUnit equipmentUnit : processConfiguration.getConfig().getEquipmentUnits()) {
-            for (Tag tag : equipmentUnit.getDataTags()) {
-                if (tag.getId() == tagId) {
-                    return Optional.of(tag);
-                }
-            }
-            for (Tag tag : equipmentUnit.getCommandTags()) {
-                if (tag.getId() == tagId) {
-                    return Optional.of(tag);
-                }
-            }
-        }
-        return Optional.empty();
     }
 
     private Object parseHoldingResponse(ReadMultipleRegistersResponse response, String dataType) {

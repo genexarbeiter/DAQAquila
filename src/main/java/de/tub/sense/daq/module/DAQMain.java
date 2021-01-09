@@ -34,11 +34,11 @@ public class DAQMain {
     public static void main(String[] args) throws Exception {
         //Set environmental variables
         System.setProperty("c2mon.daq.name", "P_CINERGIA_EL_20_DEV6");
-        System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:30203");
-        System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:30203");
-        System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:30203");
+        System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:32302");
+        System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:32302");
+        System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:32302");
         //Debug
-        System.setProperty("local.server.port", "30203");
+        System.setProperty("local.server.port", "32302");
         System.setProperty("server.address", "192.168.111.77");
         if (!loadEnvironment()) {
             return;

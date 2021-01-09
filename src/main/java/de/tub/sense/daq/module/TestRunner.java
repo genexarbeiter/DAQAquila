@@ -31,7 +31,9 @@ public class TestRunner implements CommandLineRunner {
         c2monService.getAllProcesses().forEach(processName -> sb.append(processName).append(" "));
         log.info(sb.toString());
 
+
         String processName = daqConfiguration.getConfiguration().getModelSettings().getProcessName();
+        /*
         String equipmentName = daqConfiguration.getConfiguration().getModelSettings().getEquipmentName();
         if (c2monService.processExists(processName)) {
             c2monService.removeProcessEntirely(processName);
@@ -47,7 +49,7 @@ public class TestRunner implements CommandLineRunner {
                         signal.getType(), signal.getModbus().getStartAddress(),
                         signal.getModbus().getRegister(), signal.getModbus().getCount());
             }
-        }
+        }*/
         c2monService.reloadProcessConfiguration(processName);
     }
 }
