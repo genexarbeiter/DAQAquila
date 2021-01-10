@@ -9,13 +9,14 @@ c2monSettings: # required
 
 # setting of the cinergia electric last  model in general
 modelSettings:
-  modelName: CinergiaEl20_DEV6 # required, will be in front of the tag name
+  modelName: CinergiaEl20_DEV11 # required, will be in front of the tag name
   modelVersion: 0.0.1 # optional
-  processName: P_CINERGIA_EL_20_DEV6 # required
+  processName: P_CINERGIA_EL_20_DEV11 # required
 
 equipments:
-- name: E_CINERGIA_EL_20_DEV11 # required
-  interval: 1000 # optional, time in milliseconds for refreshing all data tags
+- name: E_CINERGIA_EL_20_DEV12 # required
+  aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon
+  interval: 10000 # optional, time in milliseconds for refreshing all data tags
   type: modbus # type of the connection
   connectionSettings: # required
     address: 172.16.0.82 # required
@@ -55,4 +56,4 @@ equipments:
       type: read # required type can be one of the following words: [read,write]
       register: holding32 # required; read => [holding] write => [holding]
       startAddress: 13000 # required
-    count: 2
+      count: 2

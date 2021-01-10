@@ -20,6 +20,7 @@ public class EquipmentUnit {
     private long id;
     private String name;
     private EquipmentAddress equipmentAddress;
+    private long commfaultTagId;
     private String handlerClassName;
     private ArrayList<DataTag> dataTags;
     private ArrayList<CommandTag> commandTags;

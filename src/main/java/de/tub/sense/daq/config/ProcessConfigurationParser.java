@@ -77,12 +77,15 @@ public class ProcessConfigurationParser {
         NodeList nodeListCommandTags = document.getDocumentElement().getElementsByTagName("CommandTag");
         ArrayList<CommandTag> commandTags = new ArrayList<>();
 
+        NodeList nodeListControlTags = document.getDocumentElement().getElementsByTagName("ControlTag");
+        ArrayList<CommandTag> controlTags = new ArrayList<>();
+
         if(document.getDocumentElement().getElementsByTagName("EquipmentUnit").item(0) != null) {
             Element equipmentElement = (Element) document.getDocumentElement().getElementsByTagName("EquipmentUnit").item(0);
             equipmentUnit.setId(Long.parseLong(equipmentElement.getAttributes().getNamedItem("id").getTextContent()));
             equipmentUnit.setName(equipmentElement.getAttributes().getNamedItem("name").getTextContent());
             equipmentUnit.setHandlerClassName(equipmentElement.getElementsByTagName("handler-class-name").item(0).getTextContent());
-
+            equipmentUnit.setCommfaultTagId(Integer.parseInt(equipmentElement.getElementsByTagName("commfault-tag-id").item(0).getTextContent()));
             equipmentUnit.setEquipmentAddress(parseEquipmentAddress(
                     equipmentElement.getElementsByTagName("address").item(0).getTextContent()).orElse(new EquipmentAddress()));
 

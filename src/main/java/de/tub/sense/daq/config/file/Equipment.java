@@ -19,6 +19,7 @@ public class Equipment {
     private String name;
     private String type;
     private int interval;
+    private int aliveTagInterval;
     private ConnectionSettings connectionSettings;
     private ArrayList<Signal> signals;
 }
