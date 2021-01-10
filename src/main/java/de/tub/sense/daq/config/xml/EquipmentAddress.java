@@ -1,8 +1,6 @@
 package de.tub.sense.daq.config.xml;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * @author maxmeyer
@@ -13,6 +11,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
 public class EquipmentAddress {
 
     private String host;
@@ -20,4 +20,10 @@ public class EquipmentAddress {
     private int unitId;
     private int delay;
     private String timeUnit;
+
+    public EquipmentAddress(String host, int port, int unitId) {
+        this.host = host;
+        this.port = port;
+        this.unitId = unitId;
+    }
 }

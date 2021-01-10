@@ -49,7 +49,7 @@ equipments:
       count: 2
       #bitNumber: 0 #optional, read only a single specified bit
 
-  - name: Test # required
+  - name: Test1 # required
     type: s64 # optional, data type defined by SourceDataType enum
     description: ERROR ALARM WORD INPUT # optional
     modbus: # required

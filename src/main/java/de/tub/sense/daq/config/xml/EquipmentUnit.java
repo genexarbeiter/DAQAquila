@@ -21,6 +21,7 @@ public class EquipmentUnit {
     private String name;
     private EquipmentAddress equipmentAddress;
     private long commfaultTagId;
+    private int aliveTagInterval;
     private String handlerClassName;
     private ArrayList<DataTag> dataTags;
     private ArrayList<CommandTag> commandTags;

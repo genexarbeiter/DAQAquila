@@ -2,6 +2,7 @@ package de.tub.sense.daq.config.xml;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class HardwareAddress {
 
     private int startAddress;
@@ -26,6 +28,20 @@ public class HardwareAddress {
     private String type;
     private double minValue;
     private double maxValue;
+
+    public HardwareAddress(int startAddress, int valueCount, String type) {
+        this.startAddress = startAddress;
+        this.valueCount = valueCount;
+        this.type = type;
+    }
+
+    public HardwareAddress(int startAddress, int valueCount, String type, double minValue, double maxValue) {
+        this.startAddress = startAddress;
+        this.valueCount = valueCount;
+        this.type = type;
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+    }
 
     public static Optional<HardwareAddress> fromXMLString(String address) {
         HardwareAddress hardwareAddress = new HardwareAddress();

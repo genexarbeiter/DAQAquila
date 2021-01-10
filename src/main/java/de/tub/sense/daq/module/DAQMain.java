@@ -37,7 +37,7 @@ public class DAQMain {
         System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:32302");
-        System.setProperty("c2mon.daq.forceConfiguration", "true");
+        System.setProperty("c2mon.daq.forceConfiguration", "false");
 
         if (!loadEnvironment()) {
             return;

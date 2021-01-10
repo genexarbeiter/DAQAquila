@@ -31,35 +31,54 @@ public class ConfigService {
     private final DAQConfiguration daqConfiguration;
     private final ProcessConfiguration processConfiguration;
     private final ConfigurationService configurationService;
+    private final TagService tagService;
 
     private final String PROCESS_NAME;
 
     private boolean c2monConfigurationLoaded = false;
 
-    public ConfigService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration, ConfigurationService configurationService) {
+    public ConfigService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration, ConfigurationService configurationService, TagService tagService) {
         this.daqConfiguration = daqConfiguration;
         this.processConfiguration = processConfiguration;
         this.configurationService = configurationService;
+        this.tagService = tagService;
         PROCESS_NAME = System.getProperty("c2mon.daq.name");
-        if(processExists()) {
+        if (processExists()) {
             reloadC2monConfiguration();
         }
     }
 
-    public ConfigurationFile getConfigurationFile() {
+    protected ConfigurationFile getConfigurationFile() {
         return daqConfiguration.getConfiguration();
     }
 
-    public boolean isC2monConfigurationLoaded() {
+    protected boolean isC2monConfigurationLoaded() {
         return c2monConfigurationLoaded;
     }
 
-    public ArrayList<EquipmentUnit> getEquipmentUnits() {
+    protected ArrayList<EquipmentUnit> getEquipmentUnits() {
         return processConfiguration.getConfig().getEquipmentUnits();
     }
 
+    protected void updateDataTag(DataTag dataTag) {
+        cern.c2mon.shared.client.configuration.api.tag.DataTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.DataTag.update(dataTag.getId())
+                .address(new DataTagAddress(getSimpleHardwareAddress(dataTag.getAddress().getStartAddress(),
+                        dataTag.getAddress().getValueCount(), dataTag.getAddress().getType())))
+                .dataType(dataTypeClass(dataTag.getDataType()))
+                .build();
+        configurationService.updateDataTag(updatedTag);
+    }
+
+    protected void updateEquipment(EquipmentUnit equipmentUnit) {
+        Equipment equipment = Equipment.update(equipmentUnit.getId())
+                .address("{\"host\":\"" + equipmentUnit.getEquipmentAddress().getHost() + "\",\"port\":" + equipmentUnit.getEquipmentAddress().getPort() + ",\"unitID\":" + equipmentUnit.getEquipmentAddress().getUnitId() + "}")
+                .aliveInterval(equipmentUnit.getAliveTagInterval())
+                .build();
+        configurationService.updateEquipment(equipment);
+    }
+
     //TODO Possible performance increase, when the Tags are cached
-    public Optional<Tag> getTagFromTagId(long tagId) {
+    protected Optional<Tag> getTagFromTagId(long tagId) {
         for (EquipmentUnit equipmentUnit : processConfiguration.getConfig().getEquipmentUnits()) {
             for (Tag tag : equipmentUnit.getDataTags()) {
                 if (tag.getId() == tagId) {
@@ -76,7 +95,7 @@ public class ConfigService {
         return Optional.empty();
     }
 
-    public Optional<EquipmentAddress> getEquipmentAddress(long equipmentId) {
+    protected Optional<EquipmentAddress> getEquipmentAddress(long equipmentId) {
         for (EquipmentUnit equipmentUnit : processConfiguration.getConfig().getEquipmentUnits()) {
             if (equipmentUnit.getId() == equipmentId) {
                 return Optional.of(equipmentUnit.getEquipmentAddress());
@@ -86,7 +105,7 @@ public class ConfigService {
         return Optional.empty();
     }
 
-    public void reloadC2monConfiguration() {
+    protected void reloadC2monConfiguration() {
         processConfiguration.init(configurationService.getProcessXml(PROCESS_NAME));
         c2monConfigurationLoaded = true;
     }
@@ -94,12 +113,12 @@ public class ConfigService {
     /**
      * Create the process on the C2mon server
      */
-    public void createProcess() {
+    protected void createProcess() {
         if (processExists()) {
             throw new IllegalArgumentException("Process with name " + PROCESS_NAME + " already exists.");
         } else {
             ConfigurationReport report = configurationService.createProcess(PROCESS_NAME);
-            if(log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 log.debug("Received configuration report for process {}, with status {}, with status description {}.", report.getName(), report.getStatus().toString(), report.getStatusDescription());
             }
         }
@@ -108,7 +127,7 @@ public class ConfigService {
     /**
      * Remove a process from the C2mon server
      */
-    public void removeProcess() {
+    protected void removeProcess() {
         if (processExists()) {
             configurationService.removeProcess(PROCESS_NAME);
         } else {
@@ -119,7 +138,7 @@ public class ConfigService {
     /**
      * Remove the process and its equipments from C2mon
      */
-    public void removeProcessFromC2monEntirely() {
+    protected void removeProcessFromC2monEntirely() {
         if (log.isDebugEnabled()) {
             log.debug("Removing process {} entirely", PROCESS_NAME);
         }
@@ -149,14 +168,15 @@ public class ConfigService {
 
     /**
      * Create a equipment for an existing process
-     * @param equipmentName of the equipment
+     *
+     * @param equipmentName    of the equipment
      * @param handlerClassName of the message handler for the equipment
      * @param aliveTagInterval to send an alive tag in millis
-     * @param host of the equipment
-     * @param port of the equipment
-     * @param unitId of the equipment
+     * @param host             of the equipment
+     * @param port             of the equipment
+     * @param unitId           of the equipment
      */
-    public void createEquipment(String equipmentName, String handlerClassName, int aliveTagInterval, String host, long port, int unitId) {
+    protected void createEquipment(String equipmentName, String handlerClassName, int aliveTagInterval, String host, long port, int unitId) {
         if (log.isDebugEnabled()) {
             log.debug("Creating equipment {} for process {} with handlerClass {}", equipmentName, PROCESS_NAME, handlerClassName);
         }
@@ -183,13 +203,14 @@ public class ConfigService {
 
     /**
      * Create a equipment for an existing process
-     * @param equipmentName of the equipment
+     *
+     * @param equipmentName    of the equipment
      * @param handlerClassName of the message handler for the equipment
-     * @param host of the equipment
-     * @param port of the equipment
-     * @param unitId of the equipment
+     * @param host             of the equipment
+     * @param port             of the equipment
+     * @param unitId           of the equipment
      */
-    public void createEquipment(String equipmentName, String handlerClassName, String host, long port, int unitId) {
+    protected void createEquipment(String equipmentName, String handlerClassName, String host, long port, int unitId) {
         createEquipment(equipmentName, handlerClassName, 100000, host, port, unitId);
     }
 
@@ -198,7 +219,7 @@ public class ConfigService {
      *
      * @return true if process exists false if not
      */
-    public boolean processExists() {
+    protected boolean processExists() {
         return configurationService.getProcessNames().stream().anyMatch(process -> process.getProcessName().equals(PROCESS_NAME));
     }
 
@@ -207,30 +228,34 @@ public class ConfigService {
      *
      * @return XML configuration as String
      */
-    public String getProcessConfigurationXML() {
+    protected String getProcessConfigurationXML() {
         return configurationService.getProcessXml(PROCESS_NAME);
     }
 
     /**
      * Create a data tag for a given equipment
+     *
      * @param equipmentName of the equipment
-     * @param tagName of the tag
-     * @param datatype of the tag
-     * @param startAddress of the related register
-     * @param registerType of the related register
-     * @param valueCount of the related register
+     * @param tagName       of the tag
+     * @param datatype      of the tag
+     * @param startAddress  of the related register
+     * @param registerType  of the related register
+     * @param valueCount    of the related register
      */
-    public void createDataTag(String equipmentName, String tagName, String datatype, int startAddress, String registerType, int valueCount) {
-        SimpleHardwareAddressImpl simpleHardwareAddress
-                = new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":" + valueCount + ",\"readingType\":\"" + registerType + "\"}");
-        configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype), new DataTagAddress(simpleHardwareAddress));
+    protected void createDataTag(String equipmentName, String tagName, String datatype, int startAddress, String registerType, int valueCount) {
+        configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype), new DataTagAddress(getSimpleHardwareAddress(startAddress, valueCount, registerType)));
+    }
+
+    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType) {
+        return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":" + valueCount + ",\"readingType\":\"" + registerType + "\"}");
     }
 
     /**
      * Get the names of all running processes on the C2mon
+     *
      * @return list of process names
      */
-    public ArrayList<String> getAllProcesses() {
+    protected ArrayList<String> getAllProcesses() {
         ArrayList<String> processes = new ArrayList<>();
         configurationService.getProcessNames().forEach(processNameResponse -> processes.add(processNameResponse.getProcessName()));
         return processes;
@@ -238,12 +263,14 @@ public class ConfigService {
 
     /**
      * Convert a data type string to the corresponding data type class
+     *
      * @param datatype as string
      * @return datatype as class
      */
     private Class<?> dataTypeClass(String datatype) {
         switch (datatype) {
             case "bool":
+            case "java.lang.Boolean":
                 return Boolean.class;
             case "s8":
             case "u8":
