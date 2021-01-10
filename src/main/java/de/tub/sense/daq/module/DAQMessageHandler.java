@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,6 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     private boolean autoRefreshRunning = false;
     private IEquipmentConfiguration equipmentConfiguration;
     private ModbusTCPService modbusTCPService;
-
 
     public DAQMessageHandler() {
     }
@@ -128,9 +128,9 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     private void startAutoRefresh() {
         log.debug("Enabling auto refresh...");
-        ThreadFactory namedThreadFactory =
-                new ThreadFactoryBuilder().setNameFormat("refresh-thread").build();
-        Executors.newScheduledThreadPool(1, namedThreadFactory).scheduleAtFixedRate(() -> {
+        ThreadFactory refreshThreadFactory =
+                new ThreadFactoryBuilder().setNameFormat(equipmentConfiguration.getId() + " REFRESH").build();
+        ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(() -> {
             autoRefreshRunning = true;
             refreshAllDataTags();
         }, 10, 10, TimeUnit.SECONDS);

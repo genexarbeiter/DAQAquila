@@ -10,11 +10,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="945594be-b6a4-46d8-96ef-03189990fe79" name="Default Changelist" comment="- If force reconfiguration is false:&#10;  - automatically update configuration&#10;  - no deletion of process / equipments / datatags&#10;  - creation of new process / equipments / datatags if the ConfigInitializer does not find the one, specified in config&#10;  - set default alive tag interval to 100000ms (100s)">
+    <list default="true" id="945594be-b6a4-46d8-96ef-03189990fe79" name="Default Changelist" comment="- Added JavaDoc for all relevant methods&#10;- Removed unused methods&#10;- Cleaned up code&#10;- Warning if force update is not specified">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigInitializer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMain.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMessageHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMessageHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,6 +57,7 @@
     <option name="showVisibilityIcons" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ExpandSpringBootJavaOptionsPanel" value="true" />
     <property name="ExpandSpringBootSpringBootSettingsPanel" value="false" />
     <property name="LombokPluginEnabledInProject" value="true" />
@@ -165,7 +166,7 @@
       <workItem from="1609259286824" duration="481000" />
       <workItem from="1609411136545" duration="8590000" />
       <workItem from="1610180816375" duration="2794000" />
-      <workItem from="1610183652992" duration="37589000" />
+      <workItem from="1610183652992" duration="41091000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Commit">
       <created>1607332847816</created>
@@ -335,7 +336,14 @@
       <option name="project" value="LOCAL" />
       <updated>1610286173528</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="- Added JavaDoc for all relevant methods&#10;- Removed unused methods&#10;- Cleaned up code&#10;- Warning if force update is not specified">
+      <created>1610296412966</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1610296412966</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -377,7 +385,8 @@
     <MESSAGE value="- Support of multiple equipments in yaml configuration" />
     <MESSAGE value="- Automatically load configuration file and configure the C2mon server&#10;- Force configuration option -&gt; overwrite the existing configuration on C2mon server&#10;- Deleted C2monService.java and moved all necessary functionality to ConfigService.java&#10;- Created a ConfigInitializer which administrates the configuration and reconfiguration of the C2mon server&#10;- Switched back to custom start method in main class because otherwise Spring services are not loaded" />
     <MESSAGE value="- If force reconfiguration is false:&#10;  - automatically update configuration&#10;  - no deletion of process / equipments / datatags&#10;  - creation of new process / equipments / datatags if the ConfigInitializer does not find the one, specified in config&#10;  - set default alive tag interval to 100000ms (100s)" />
-    <option name="LAST_COMMIT_MESSAGE" value="- If force reconfiguration is false:&#10;  - automatically update configuration&#10;  - no deletion of process / equipments / datatags&#10;  - creation of new process / equipments / datatags if the ConfigInitializer does not find the one, specified in config&#10;  - set default alive tag interval to 100000ms (100s)" />
+    <MESSAGE value="- Added JavaDoc for all relevant methods&#10;- Removed unused methods&#10;- Cleaned up code&#10;- Warning if force update is not specified" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Added JavaDoc for all relevant methods&#10;- Removed unused methods&#10;- Cleaned up code&#10;- Warning if force update is not specified" />
   </component>
   <component name="WindowStateProjectService">
     <state x="2465" y="96" key="#DAQConfigurerMain" timestamp="1607348140932">
@@ -394,12 +403,12 @@
     </state>
     <state x="267" y="330" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1609253886216" />
     <state x="1947" y="333" key="#com.intellij.execution.impl.EditConfigurationsDialog/1680.23.1680.986/0.23.1680.1027@1680.23.1680.986" timestamp="1607360406619" />
-    <state x="2333" y="-519" key="#com.intellij.ide.util.MemberChooser" timestamp="1610284151239">
+    <state x="2333" y="-519" key="#com.intellij.ide.util.MemberChooser" timestamp="1610297611472">
       <screen x="1680" y="-734" width="1920" height="1080" />
     </state>
     <state x="571" y="209" key="#com.intellij.ide.util.MemberChooser/0.0.1680.1050@0.0.1680.1050" timestamp="1607953249345" />
     <state x="2333" y="-501" key="#com.intellij.ide.util.MemberChooser/1680.-711.1920.1057/0.23.1680.997@1680.-711.1920.1057" timestamp="1607689053224" />
-    <state x="2333" y="-519" key="#com.intellij.ide.util.MemberChooser/1680.-734.1920.1080/0.0.1680.1050@1680.-734.1920.1080" timestamp="1610284151239" />
+    <state x="2333" y="-519" key="#com.intellij.ide.util.MemberChooser/1680.-734.1920.1080/0.0.1680.1050@1680.-734.1920.1080" timestamp="1610297611472" />
     <state x="2257" y="312" key="#com.intellij.ide.util.TreeClassChooserDialog" timestamp="1607359832247">
       <screen x="1680" y="23" width="1680" height="986" />
     </state>
@@ -560,11 +569,11 @@
     </state>
     <state x="359" y="134" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1609414867302" />
     <state x="2039" y="154" key="SettingsEditor/1680.23.1680.1027/0.23.1680.985@1680.23.1680.1027" timestamp="1607339053210" />
-    <state x="2183" y="-490" key="Vcs.Push.Dialog.v2" timestamp="1610286176031">
+    <state x="2183" y="-490" key="Vcs.Push.Dialog.v2" timestamp="1610296414557">
       <screen x="1680" y="-734" width="1920" height="1080" />
     </state>
     <state x="440" y="237" key="Vcs.Push.Dialog.v2/0.0.1680.1050@0.0.1680.1050" timestamp="1609420328062" />
-    <state x="2183" y="-490" key="Vcs.Push.Dialog.v2/1680.-734.1920.1080/0.0.1680.1050@1680.-734.1920.1080" timestamp="1610286176031" />
+    <state x="2183" y="-490" key="Vcs.Push.Dialog.v2/1680.-734.1920.1080/0.0.1680.1050@1680.-734.1920.1080" timestamp="1610296414557" />
     <state x="2183" y="-490" key="Vcs.Push.Dialog.v2/1680.-734.1920.1080/0.23.1680.1027@1680.-734.1920.1080" timestamp="1610215231959" />
     <state x="2120" y="255" key="Vcs.Push.Dialog.v2/1680.23.1680.1027/0.23.1680.1027@1680.23.1680.1027" timestamp="1607352710590" />
     <state x="2120" y="255" key="Vcs.Push.Dialog.v2/1680.23.1680.1027/0.23.1680.985@1680.23.1680.1027" timestamp="1607336533939" />

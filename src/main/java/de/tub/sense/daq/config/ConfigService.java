@@ -67,7 +67,7 @@ public class ConfigService {
     /**
      * Downloads the XML configuration file from the C2mon server and parses it into a processConfiguration object
      */
-    private void reloadC2monConfiguration() {
+    protected void reloadC2monConfiguration() {
         processConfiguration.init(configurationService.getProcessXml(PROCESS_NAME));
         c2monConfigurationLoaded = true;
     }
