@@ -1,6 +1,5 @@
 package de.tub.sense.daq.config;
 
-import com.google.gson.internal.$Gson$Preconditions;
 import de.tub.sense.daq.config.file.*;
 import de.tub.sense.daq.config.xml.*;
 import de.tub.sense.daq.module.DAQMessageHandler;
@@ -30,6 +29,15 @@ public class ConfigInitializer implements CommandLineRunner {
                 && Boolean.parseBoolean(System.getProperty("c2mon.daq.forceConfiguration"));
     }
 
+    /**
+     * Run by Spring on start up, checks if the C2mon server is configured properly for the DAQ, if not it configures the
+     * C2mon server to work with the DAQ. If c2mon.daq.forceConfiguration is true, the DAQ overwrites any settings for
+     * the process of the DAQ and configures it with the config file, if false the configuration on the C2mon server is
+     * only updated, and nothing is deleted.
+     *
+     * @param args from start
+     * @throws Exception on exception
+     */
     @Override
     public void run(String... args) throws Exception {
         if (loadConfigFromServer()) {
@@ -50,6 +58,12 @@ public class ConfigInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Checks if there is a configuration for the DAQ on the C2mon server. If there is one it loads it if the
+     * configuration is not already loaded
+     *
+     * @return true if the configuration is available, false if not
+     */
     private boolean loadConfigFromServer() {
         log.debug("Loading config from C2mon...");
         log.debug("Checking if process already exists...");
@@ -63,6 +77,9 @@ public class ConfigInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Configures the C2mon from config file. If this method is started, no configuration may yet be performed on the C2mon server!
+     */
     private void configureC2mon() {
         ConfigurationFile configurationFile = configService.getConfigurationFile();
         configService.createProcess();
@@ -77,6 +94,10 @@ public class ConfigInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Updates the C2mon configuration from config file. The method can only be run,
+     * if there is already a process for this DAQ configured on the C2mon server.
+     */
     private void updateC2monConfiguration() {
         log.debug("Updating C2mon configuration...");
         ConfigurationFile configurationFile = configService.getConfigurationFile();
@@ -89,7 +110,7 @@ public class ConfigInitializer implements CommandLineRunner {
                     updateEquipment(equipment, equipmentUnit);
                 }
             }
-            if(!equipmentExists) {
+            if (!equipmentExists) {
                 if (log.isDebugEnabled()) {
                     log.debug("Equipment {} not found. Creating a new equipment...", equipment.getName());
                 }
@@ -105,8 +126,15 @@ public class ConfigInitializer implements CommandLineRunner {
         }
     }
 
+    /**
+     * Updates an equipment. Needs the updated equipment from config file, and the current corresponding
+     * equipment unit from the C2mon server
+     *
+     * @param updatedEquipment     from the config file
+     * @param currentEquipmentUnit from the C2mon server
+     */
     private void updateEquipment(Equipment updatedEquipment, EquipmentUnit currentEquipmentUnit) {
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("Updating equipment {} with id {}...", updatedEquipment.getName(), currentEquipmentUnit.getId());
         }
         currentEquipmentUnit.setEquipmentAddress(new EquipmentAddress(
@@ -126,7 +154,7 @@ public class ConfigInitializer implements CommandLineRunner {
                 }
             }
             //TODO Do it also for command tags
-            if(!signalExists) {
+            if (!signalExists) {
                 if (log.isDebugEnabled()) {
                     log.debug("Data tag {} not found. Creating a new Data tag...", signal.getName());
                 }
@@ -137,6 +165,13 @@ public class ConfigInitializer implements CommandLineRunner {
 
     }
 
+    /**
+     * Updates a signal. Needs the updated signal from config file, and the current corresponding
+     * data tag from the C2mon server
+     *
+     * @param signal  from the config file
+     * @param dataTag from the C2mon server
+     */
     private void updateSignal(Signal signal, DataTag dataTag) {
         if (log.isDebugEnabled()) {
             log.debug("Updating data tag {} with id {}...", signal.getName(), dataTag.getId());
@@ -151,6 +186,9 @@ public class ConfigInitializer implements CommandLineRunner {
 
     }
 
+    /**
+     * Removes the configuration for the DAQ entirely from the C2mon server
+     */
     private void removeC2monConfiguration() {
         configService.removeProcessFromC2monEntirely();
     }

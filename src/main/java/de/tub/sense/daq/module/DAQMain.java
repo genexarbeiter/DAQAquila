@@ -62,6 +62,10 @@ public class DAQMain {
             log.error("Missing environment variable 'c2mon.daq.jms.url'");
             return false;
         }
+        if (!System.getProperties().containsKey("c2mon.daq.forceConfiguration")) {
+            log.info("Missing environment variable 'c2mon.daq.jms.url'. Setting it to default value: 'false'");
+            System.setProperty("c2mon.daq.forceConfiguration", "false");
+        }
         return true;
     }
 

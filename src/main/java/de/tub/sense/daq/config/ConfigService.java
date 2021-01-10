@@ -1,7 +1,6 @@
 package de.tub.sense.daq.config;
 
 import cern.c2mon.client.core.service.ConfigurationService;
-import cern.c2mon.client.core.service.TagService;
 import cern.c2mon.shared.client.configuration.ConfigConstants;
 import cern.c2mon.shared.client.configuration.ConfigurationElementReport;
 import cern.c2mon.shared.client.configuration.ConfigurationReport;
@@ -11,12 +10,13 @@ import cern.c2mon.shared.client.configuration.api.tag.StatusTag;
 import cern.c2mon.shared.common.datatag.DataTagAddress;
 import cern.c2mon.shared.common.datatag.address.impl.SimpleHardwareAddressImpl;
 import de.tub.sense.daq.config.file.ConfigurationFile;
-import de.tub.sense.daq.config.xml.*;
+import de.tub.sense.daq.config.xml.CommandTag;
+import de.tub.sense.daq.config.xml.DataTag;
+import de.tub.sense.daq.config.xml.EquipmentUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 /**
  * @author maxmeyer
@@ -31,35 +31,61 @@ public class ConfigService {
     private final DAQConfiguration daqConfiguration;
     private final ProcessConfiguration processConfiguration;
     private final ConfigurationService configurationService;
-    private final TagService tagService;
 
     private final String PROCESS_NAME;
 
     private boolean c2monConfigurationLoaded = false;
 
-    public ConfigService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration, ConfigurationService configurationService, TagService tagService) {
+    public ConfigService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration, ConfigurationService configurationService) {
         this.daqConfiguration = daqConfiguration;
         this.processConfiguration = processConfiguration;
         this.configurationService = configurationService;
-        this.tagService = tagService;
         PROCESS_NAME = System.getProperty("c2mon.daq.name");
         if (processExists()) {
             reloadC2monConfiguration();
         }
     }
 
+    /**
+     * Returns the local configuration for the DAQ
+     *
+     * @return ConfigurationFile object
+     */
     protected ConfigurationFile getConfigurationFile() {
         return daqConfiguration.getConfiguration();
     }
 
+    /**
+     * Checks if the configuration for the daq is loaded from the c2mon server yet
+     *
+     * @return true if already loaded at least once, false if not
+     */
     protected boolean isC2monConfigurationLoaded() {
         return c2monConfigurationLoaded;
     }
 
+    /**
+     * Downloads the XML configuration file from the C2mon server and parses it into a processConfiguration object
+     */
+    private void reloadC2monConfiguration() {
+        processConfiguration.init(configurationService.getProcessXml(PROCESS_NAME));
+        c2monConfigurationLoaded = true;
+    }
+
+    /**
+     * Get all equipment units for the DAQ
+     *
+     * @return list of equipment unit objects
+     */
     protected ArrayList<EquipmentUnit> getEquipmentUnits() {
         return processConfiguration.getConfig().getEquipmentUnits();
     }
 
+    /**
+     * Update a data tag on the C2mon server without deleting it
+     *
+     * @param dataTag you want to update
+     */
     protected void updateDataTag(DataTag dataTag) {
         cern.c2mon.shared.client.configuration.api.tag.DataTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.DataTag.update(dataTag.getId())
                 .address(new DataTagAddress(getSimpleHardwareAddress(dataTag.getAddress().getStartAddress(),
@@ -69,45 +95,17 @@ public class ConfigService {
         configurationService.updateDataTag(updatedTag);
     }
 
+    /**
+     * Update a equipment on the C2mon server without deleting it
+     *
+     * @param equipmentUnit you want to update
+     */
     protected void updateEquipment(EquipmentUnit equipmentUnit) {
         Equipment equipment = Equipment.update(equipmentUnit.getId())
                 .address("{\"host\":\"" + equipmentUnit.getEquipmentAddress().getHost() + "\",\"port\":" + equipmentUnit.getEquipmentAddress().getPort() + ",\"unitID\":" + equipmentUnit.getEquipmentAddress().getUnitId() + "}")
                 .aliveInterval(equipmentUnit.getAliveTagInterval())
                 .build();
         configurationService.updateEquipment(equipment);
-    }
-
-    //TODO Possible performance increase, when the Tags are cached
-    protected Optional<Tag> getTagFromTagId(long tagId) {
-        for (EquipmentUnit equipmentUnit : processConfiguration.getConfig().getEquipmentUnits()) {
-            for (Tag tag : equipmentUnit.getDataTags()) {
-                if (tag.getId() == tagId) {
-                    return Optional.of(tag);
-                }
-            }
-            for (Tag tag : equipmentUnit.getCommandTags()) {
-                if (tag.getId() == tagId) {
-                    return Optional.of(tag);
-                }
-            }
-        }
-        log.warn("Tag with tagId {} not found", tagId);
-        return Optional.empty();
-    }
-
-    protected Optional<EquipmentAddress> getEquipmentAddress(long equipmentId) {
-        for (EquipmentUnit equipmentUnit : processConfiguration.getConfig().getEquipmentUnits()) {
-            if (equipmentUnit.getId() == equipmentId) {
-                return Optional.of(equipmentUnit.getEquipmentAddress());
-            }
-        }
-        log.warn("Equipment with equipmentId {} not found", equipmentId);
-        return Optional.empty();
-    }
-
-    protected void reloadC2monConfiguration() {
-        processConfiguration.init(configurationService.getProcessXml(PROCESS_NAME));
-        c2monConfigurationLoaded = true;
     }
 
     /**
@@ -246,6 +244,14 @@ public class ConfigService {
         configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype), new DataTagAddress(getSimpleHardwareAddress(startAddress, valueCount, registerType)));
     }
 
+    /**
+     * Parses a register with startAddress, valueCount and registerType to a SimpleHardwareAddressImplementation
+     *
+     * @param startAddress of the register
+     * @param valueCount   of the register
+     * @param registerType of the register (e.g. holding32)
+     * @return SimpleHardwareAddressImpl object for the given arguments, which can be sent to the C2mon server
+     */
     private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType) {
         return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":" + valueCount + ",\"readingType\":\"" + registerType + "\"}");
     }
@@ -274,19 +280,25 @@ public class ConfigService {
                 return Boolean.class;
             case "s8":
             case "u8":
+            case "java.lang.Byte":
                 return Byte.class;
             case "s16":
             case "u16":
+            case "java.lang.Short":
                 return Short.class;
             case "u32":
             case "s32":
+            case "java.lang.Integer":
                 return Integer.class;
             case "s64":
             case "u64":
+            case "java.lang.Long":
                 return Long.class;
             case "float32":
+            case "java.lang.Float":
                 return Float.class;
             case "float64":
+            case "java.lang.Double":
                 return Double.class;
             default:
                 throw new IllegalArgumentException("Datatype " + datatype + " could not be converted to class");
