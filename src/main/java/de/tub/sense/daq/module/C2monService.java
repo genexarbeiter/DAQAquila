@@ -11,7 +11,7 @@ import cern.c2mon.shared.client.configuration.api.tag.AliveTag;
 import cern.c2mon.shared.client.configuration.api.tag.StatusTag;
 import cern.c2mon.shared.common.datatag.DataTagAddress;
 import cern.c2mon.shared.common.datatag.address.impl.SimpleHardwareAddressImpl;
-import de.tub.sense.daq.config.DAQConfigurationService;
+import de.tub.sense.daq.config.ConfigService;
 import de.tub.sense.daq.config.xml.CommandTag;
 import de.tub.sense.daq.config.xml.DataTag;
 import de.tub.sense.daq.config.xml.EquipmentUnit;
@@ -36,12 +36,12 @@ public class C2monService {
     private final TagService tagService;
 
     //Custom services
-    private final DAQConfigurationService daqConfigurationService;
+    private final ConfigService configService;
 
-    public C2monService(ConfigurationService configurationService, TagService tagService, DAQConfigurationService daqConfigurationService) {
+    public C2monService(ConfigurationService configurationService, TagService tagService, ConfigService configService) {
         this.configurationService = configurationService;
         this.tagService = tagService;
-        this.daqConfigurationService = daqConfigurationService;
+        this.configService = configService;
     }
 
     /**
@@ -82,7 +82,7 @@ public class C2monService {
             log.debug("Removing process {} entirely", processName);
         }
         if (processExists(processName)) {
-            for (EquipmentUnit equipmentUnit : daqConfigurationService.getEquipmentUnits()) {
+            for (EquipmentUnit equipmentUnit : configService.getEquipmentUnits()) {
                 log.debug("Removing data tags");
                 for (DataTag dataTag : equipmentUnit.getDataTags()) {
                     configurationService.removeDataTagById(dataTag.getId());

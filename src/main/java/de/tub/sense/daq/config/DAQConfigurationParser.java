@@ -18,12 +18,12 @@ import java.io.InputStream;
 
 @Slf4j
 @Component
-public class ConfigurationParser {
+public class DAQConfigurationParser {
 
     private InputStream daqConfigFileStream;
     private ConfigurationFile configurationFile;
 
-    public ConfigurationParser() {
+    public DAQConfigurationParser() {
         loadFile();
     }
 

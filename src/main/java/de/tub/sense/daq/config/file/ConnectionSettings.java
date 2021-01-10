@@ -13,7 +13,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class ModbusSettings {
+public class ConnectionSettings {
 
     private String address;
     private int port;

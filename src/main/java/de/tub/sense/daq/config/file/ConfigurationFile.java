@@ -17,8 +17,7 @@ import java.util.ArrayList;
 @ToString
 public class ConfigurationFile {
 
-    private ModbusSettings modbusSettings;
     private C2monSettings c2monSettings;
     private ModelSettings modelSettings;
-    private ArrayList<Signal> signals;
+    private ArrayList<Equipment> equipments;
 }

@@ -19,7 +19,6 @@ WORKDIR /workspace
 COPY pom.xml /workspace
 RUN mvn dependency:go-offline
 COPY src /workspace/src
-#RUN mvn -B package --file pom.xml -DskipTests
 RUN mvn package
 
 FROM openjdk:14-slim

@@ -18,7 +18,5 @@ public class ModelSettings {
 
     private String modelName;
     private String modelVersion;
-    private String equipmentName;
     private String processName;
-    private long interval;
 }

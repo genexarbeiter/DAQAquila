@@ -19,7 +19,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.main.class>cern.c2mon.daq.DaqStartup</project.main.class>
+        <project.main.class>de.tub.sense.daq.module.DAQMain</project.main.class>
     </properties>
 
     <repositories>

@@ -4,6 +4,7 @@ import de.tub.sense.daq.config.xml.EquipmentAddress;
 import de.tub.sense.daq.config.xml.EquipmentUnit;
 import de.tub.sense.daq.config.xml.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,12 +18,12 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class DAQConfigurationService {
+public class ConfigService {
 
     private final DAQConfiguration daqConfiguration;
     private final ProcessConfiguration processConfiguration;
 
-    public DAQConfigurationService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration) {
+    public ConfigService(DAQConfiguration daqConfiguration, ProcessConfiguration processConfiguration) {
         this.daqConfiguration = daqConfiguration;
         this.processConfiguration = processConfiguration;
     }

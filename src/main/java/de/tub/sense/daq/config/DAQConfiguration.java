@@ -12,9 +12,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DAQConfiguration {
 
-    private final ConfigurationParser parser;
+    private final DAQConfigurationParser parser;
 
-    public DAQConfiguration(ConfigurationParser parser) {
+    public DAQConfiguration(DAQConfigurationParser parser) {
         this.parser = parser;
     }
 
