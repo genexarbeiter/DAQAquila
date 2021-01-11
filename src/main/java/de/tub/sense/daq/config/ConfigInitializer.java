@@ -89,7 +89,9 @@ public class ConfigInitializer implements CommandLineRunner {
                     connectionSettings.getAddress(), connectionSettings.getPort(), connectionSettings.getUnitID());
             for (Signal signal : equipment.getSignals()) {
                 Modbus modbus = signal.getModbus();
-                configService.createDataTag(equipment.getName(), signal.getName(), signal.getType(), modbus.getStartAddress(), modbus.getRegister(), modbus.getCount());
+                configService.createDataTag(equipment.getName(), signal.getName(), signal.getType(),
+                        modbus.getStartAddress(), modbus.getRegister(), modbus.getCount(),
+                        signal.getOffset(), signal.getMultiplier(), signal.getThreshold());
             }
         }
     }
@@ -159,7 +161,8 @@ public class ConfigInitializer implements CommandLineRunner {
                     log.debug("Data tag {} not found. Creating a new Data tag...", signal.getName());
                 }
                 configService.createDataTag(currentEquipmentUnit.getName(), signal.getName(), signal.getType(),
-                        signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount());
+                        signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
+                        signal.getOffset(), signal.getMultiplier(), signal.getThreshold());
             }
         }
 

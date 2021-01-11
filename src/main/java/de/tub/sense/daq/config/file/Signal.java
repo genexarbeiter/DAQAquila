@@ -23,4 +23,5 @@ public class Signal {
     private long max;
     private double offset;
     private double multiplier;
+    private double threshold;
 }

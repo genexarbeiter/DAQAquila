@@ -2,6 +2,7 @@ package de.tub.sense.daq.modbus;
 
 import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
+import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
 import de.tub.sense.daq.config.xml.HardwareAddress;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -25,35 +26,48 @@ public class ModbusTCPService {
     /**
      * Establish the connection to the ModbusTCPEndpoint. If it fails, it logs the exception.
      */
-    public void connect(String host, int port, int unitId) {
+    public boolean connect(String host, int port, int unitId) {
         try {
             tcpModbusSocket = new TcpModbusSocket(host, port, unitId);
             tcpModbusSocket.connect();
             log.info("Connection established with modbus host {} port {} and unitId {}",
                     host, port, unitId);
-        } catch (Exception e) {
-            log.warn("Failed to initialize modbus tcp connection.", e);
+            return true;
+        } catch (Throwable e) {
+            log.error("Failed to initialize modbus tcp connection.", e);
+            return false;
         }
+    }
+
+    public boolean isConnected()  {
+        if(tcpModbusSocket != null) {
+            TCPMasterConnection connection = tcpModbusSocket.getConnection();
+            return connection.isConnected();
+        }
+        return false;
     }
 
     //TODO handle more holding types than just 'holding32' holding32 is most common and therefor used for development
     public Optional<Object> getValue(long dataTagId, HardwareAddress hardwareAddress, String dataType) {
-        switch (hardwareAddress.getType()) {
-            case "holding32":
-                try {
-                    return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
-                            hardwareAddress.getValueCount()), dataType));
-                } catch (Exception e) {
-                    log.warn("Could not read holding register with tagId " + dataTagId, e);
-                    return Optional.empty();
-                }
-            case "coil":
-                try {
-                    return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
-                } catch (Exception e) {
-                    log.warn("Could not read coil register with tagName " + dataTagId, e);
-                    return Optional.empty();
-                }
+        if (hardwareAddress.getType().equals("holding32")) {
+            try {
+                return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
+                        hardwareAddress.getValueCount()), dataType));
+            } catch (Exception e) {
+                log.warn("Could not read holding register with tagId " + dataTagId, e);
+                return Optional.empty();
+            }
+        } else if (hardwareAddress.getType().equals("coil")) {
+            try {
+                return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
+            } catch (Exception e) {
+                log.warn("Could not read coil register with tagName " + dataTagId, e);
+                return Optional.empty();
+            }
+        } else {
+            log.warn("Modbus type {} not valid.", hardwareAddress.getType());
+            return Optional.empty();
+        }
             /*
             case "input":
                     try {
@@ -68,10 +82,6 @@ public class ModbusTCPService {
                         log.warn("Could not read discrete input register with tagName " + tagName, e);
                     }
                  */
-            default:
-                log.warn("Modbus type {} not valid.", hardwareAddress.getType());
-                return Optional.empty();
-        }
     }
 
     public void disconnect() {
@@ -96,18 +106,23 @@ public class ModbusTCPService {
         switch (dataType) {
             case "s8":
             case "u8":
+            case "java.lang.Byte":
                 return bb.get();
             case "s16":
             case "u16":
+            case "java.lang.Short":
                 return bb.getShort();
             case "u32":
             case "s32":
+            case "java.lang.Integer":
                 return bb.getInt();
             case "s64":
             case "java.lang.Long": //"u64" (switched to XML Config)
                 return bb.getLong();
             case "float32":
+            case "java.lang.Float":
                 return bb.getFloat();
+            case "java.lang.Double":
             case "float64":
                 return bb.getDouble();
             default:

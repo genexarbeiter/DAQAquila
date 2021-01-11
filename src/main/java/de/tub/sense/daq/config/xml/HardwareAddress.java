@@ -28,6 +28,9 @@ public class HardwareAddress {
     private String type;
     private double minValue;
     private double maxValue;
+    private double offset;
+    private double multiplier;
+    private double threshold;
 
     public HardwareAddress(int startAddress, int valueCount, String type) {
         this.startAddress = startAddress;

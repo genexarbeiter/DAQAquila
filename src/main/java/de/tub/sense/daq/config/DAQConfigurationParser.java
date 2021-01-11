@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -34,9 +36,13 @@ public class DAQConfigurationParser {
     private void loadFile() {
         //Just for development, later file is fetched from server
         try {
-            daqConfigFileStream = new ClassPathResource("demo_config.yaml").getInputStream();
+            File daqConfigFile = new File("daq-config.yaml");
+            daqConfigFileStream = new FileInputStream(daqConfigFile);
+            //daqConfigFileStream = new ClassPathResource("demo_config2.yaml").getInputStream();
         } catch (IOException e) {
-            log.warn("Failed to load demo configuration", e);
+            log.error("Failed to load yaml configuration. " +
+                    "How to solve it: In Docker volume root the file 'daq-config.yaml' has to be placed.", e);
+            throw new RuntimeException("Could not load DAQ configuration file.");
         }
         parseConfiguration();
     }

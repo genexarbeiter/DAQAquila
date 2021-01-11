@@ -3,7 +3,6 @@ package de.tub.sense.daq.module;
 import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.common.IEquipmentMessageSender;
 import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
-import cern.c2mon.shared.common.command.ISourceCommandTag;
 import cern.c2mon.shared.common.datatag.ISourceDataTag;
 import cern.c2mon.shared.common.datatag.ValueUpdate;
 import cern.c2mon.shared.common.process.IEquipmentConfiguration;
@@ -20,6 +19,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.io.StringReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,10 +38,17 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class DAQMessageHandler extends EquipmentMessageHandler {
 
+    private final HashMap<Long, Object> valueCache = new HashMap<>();
+    private final HashMap<Long, HardwareAddress> addressCache = new HashMap<>();
+    private final HashMap<Long, String> dataTypeCache = new HashMap<>();
     IEquipmentMessageSender equipmentMessageSender;
     private boolean autoRefreshRunning = false;
     private IEquipmentConfiguration equipmentConfiguration;
     private ModbusTCPService modbusTCPService;
+    private int skipped = 0;
+    private int threshold_skipped = 0;
+    private int tagCount = 0;
+    private boolean performanceMode = false;
 
     public DAQMessageHandler() {
     }
@@ -53,12 +61,32 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     @Override
     public void connectToDataSource() {
         log.info("Connecting to datasource...");
+        checkPerformanceMode();
         equipmentConfiguration = getEquipmentConfiguration();
         equipmentMessageSender = getEquipmentMessageSender();
         EquipmentAddress equipmentAddress = parseEquipmentAddress(
                 equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new);
         modbusTCPService = new ModbusTCPService();
-        modbusTCPService.connect(equipmentAddress.getHost(), equipmentAddress.getPort(), equipmentAddress.getUnitId());
+        int triedConnection = 0;
+        int sleepTime = 1;
+        while (!modbusTCPService.connect(equipmentAddress.getHost(), equipmentAddress.getPort(), equipmentAddress.getUnitId())) {
+            try {
+                triedConnection++;
+                if (triedConnection > 5) {
+                    sleepTime = 5;
+                }
+                if (triedConnection > 20) {
+                    sleepTime = 20;
+                }
+                if (triedConnection > 100) {
+                    sleepTime = 300;
+                }
+                log.error("Connection to modbus failed. Trying again in {} second(s)...", sleepTime);
+                Thread.sleep(sleepTime * 1000);
+            } catch (InterruptedException e) {
+                log.warn("Interrupted exception occurred while waiting for connection", e);
+            }
+        }
     }
 
     /**
@@ -80,8 +108,23 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     @Override
     public void refreshAllDataTags() {
         log.info("Refreshing all data tags...");
-        equipmentConfiguration.getSourceDataTags().keySet().forEach(this::refreshDataTag);
-        log.info("Refreshed all data tags successful");
+        if(!modbusTCPService.isConnected()) {
+            log.warn("Modbus TCP connection lost, trying to reconnect...");
+            connectToDataSource();
+        }
+        long millis = System.currentTimeMillis();
+        skipped = 0;
+        threshold_skipped = 0;
+        if (!autoRefreshRunning) {
+            equipmentConfiguration.getSourceDataTags().keySet().forEach(this::refreshDataTag);
+            tagCount = equipmentConfiguration.getSourceDataTags().size();
+        } else {
+            dataTypeCache.keySet().forEach(this::refreshDataTag);
+        }
+        long millis2 = System.currentTimeMillis();
+        long time = millis2 - millis;
+        log.info("Refreshed all data tags successful took {}ms | skipped {}/{} (equal) | skipped {}/{} (threshold) | updated {}/{}"
+                , time, skipped, tagCount, threshold_skipped, tagCount, tagCount - threshold_skipped - skipped, tagCount);
         if (!autoRefreshRunning) {
             startAutoRefresh();
         }
@@ -94,32 +137,104 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     @Override
     public void refreshDataTag(long tagId) {
-        if (log.isDebugEnabled()) {
-            log.debug("Refreshing data tag {}...", tagId);
+        if (log.isTraceEnabled()) {
+            log.trace("Refreshing data tag {}...", tagId);
         }
-        equipmentMessageSender.confirmEquipmentStateOK();
-        ISourceDataTag dataTag = equipmentConfiguration.getSourceDataTag(tagId);
-        ISourceCommandTag commandTag = equipmentConfiguration.getSourceCommandTag(tagId);
-        HardwareAddress hardwareAddress = parseHardwareAddress(
-                dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
-
-        log.debug("Retrieving tag value from modbus tcp service...");
-        Optional<Object> value = modbusTCPService.getValue(tagId, hardwareAddress, dataTag.getDataType());
-
-        if (!value.isPresent()) {
-            log.warn("Failed to read value from tagId {}, skipping update", tagId);
-            return;
-        }
-
         try {
-            equipmentMessageSender.update(tagId, new ValueUpdate(value.get()));
-        } catch (Exception e) {
-            log.error("Could not send value update", e);
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("Refreshing data tag {} success", tagId);
+            HardwareAddress hardwareAddress;
+            String datatype;
+            if (!autoRefreshRunning) {
+                ISourceDataTag dataTag = equipmentConfiguration.getSourceDataTag(tagId);
+                hardwareAddress = parseHardwareAddress(
+                        dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
+                datatype = dataTag.getDataType();
+                addressCache.put(tagId, hardwareAddress);
+                dataTypeCache.put(tagId, datatype);
+            } else {
+                hardwareAddress = addressCache.get(tagId);
+                datatype = dataTypeCache.get(tagId);
+            }
+
+            log.trace("Retrieving tag value from modbus tcp service...");
+            Optional<Object> value = modbusTCPService.getValue(tagId, hardwareAddress, datatype);
+            if (!value.isPresent()) {
+                log.warn("Failed to read value from tagId {}, skipping update", tagId);
+                return;
+            }
+            Object valueObject = value.get();
+            if (!autoRefreshRunning) {
+                valueCache.put(tagId, valueObject);
+            }
+            Object prevValue = valueCache.get(tagId);
+            if (prevValue.equals(valueObject)) {
+                skipped++;
+                return;
+            }
+            if (!performanceMode) {
+                double multiplier = hardwareAddress.getMultiplier();
+                double offset = hardwareAddress.getOffset();
+                double threshold = hardwareAddress.getThreshold();
+                if (multiplier == 0.0) multiplier = 1;
+                if (valueObject instanceof Float) {
+                    float valueFloat = (float) valueObject;
+                    float prevFloat = (float) prevValue;
+                    if(Math.abs(valueFloat - prevFloat) > threshold) {
+                        valueFloat *= multiplier;
+                        valueFloat += offset;
+                        equipmentMessageSender.update(tagId, new ValueUpdate(valueFloat));
+                    } else {
+                        threshold_skipped++;
+                        return;
+                    }
+                } else if (valueObject instanceof Boolean) {
+                    equipmentMessageSender.update(tagId, new ValueUpdate(valueObject));
+                } else if (valueObject instanceof Integer) {
+                    int valueInt = (int) valueObject;
+                    valueInt *= multiplier;
+                    valueInt += offset;
+                    equipmentMessageSender.update(tagId, new ValueUpdate(valueInt));
+                } else if (valueObject instanceof Byte) {
+                    byte valueByte = (byte) valueObject;
+                    valueByte *= multiplier;
+                    valueByte += offset;
+                    equipmentMessageSender.update(tagId, new ValueUpdate(valueByte));
+                } else if (valueObject instanceof Long) {
+                    long valueLong = (long) valueObject;
+                    valueLong *= multiplier;
+                    valueLong += offset;
+                    equipmentMessageSender.update(tagId, new ValueUpdate(valueLong));
+                } else if (valueObject instanceof Short) {
+                    short valueShort = (short) valueObject;
+                    valueShort *= multiplier;
+                    valueShort += offset;
+                    equipmentMessageSender.update(tagId, new ValueUpdate(valueShort));
+                } else if (valueObject instanceof Double) {
+                    double valueDouble = (double) valueObject;
+                    double prevDouble = (double) prevValue;
+                    if(Math.abs(valueDouble - prevDouble) > threshold) {
+                        valueDouble *= multiplier;
+                        valueDouble += offset;
+                        equipmentMessageSender.update(tagId, new ValueUpdate(valueDouble));
+                    } else {
+                        threshold_skipped++;
+                        return;
+                    }
+                } else {
+                    equipmentMessageSender.update(tagId, new ValueUpdate(valueObject));
+                }
+            } else {
+                equipmentMessageSender.update(tagId, new ValueUpdate(valueObject));
+            }
+            valueCache.put(tagId, valueObject);
+            if (log.isTraceEnabled()) {
+                log.trace("Refreshing data tag {} success", tagId);
+            }
+        } catch (Throwable e) {
+            log.error("Could not refresh data tag {}", tagId);
+            log.error("Exception occurred", e);
         }
     }
+
 
     /**
      * Starts a new thread called refresh-thread, which automatically calls the method refreshAllDataTags() in a specific
@@ -128,14 +243,23 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
      */
     private void startAutoRefresh() {
         log.debug("Enabling auto refresh...");
+        long delay = Long.parseLong(System.getProperty("c2mon.daq.refreshDelay"));
         ThreadFactory refreshThreadFactory =
                 new ThreadFactoryBuilder().setNameFormat(equipmentConfiguration.getId() + " REFRESH").build();
         ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(() -> {
             autoRefreshRunning = true;
             refreshAllDataTags();
-        }, 10, 10, TimeUnit.SECONDS);
+        }, delay, delay, TimeUnit.MILLISECONDS);
     }
 
+    private void checkPerformanceMode() {
+        if (Boolean.parseBoolean(System.getProperty("c2mon.daq.performanceMode"))) {
+            performanceMode = true;
+            log.info("Performance mode enabled (No offset, multiplier and accuracy check)");
+        } else {
+            log.info("Performance mode disabled");
+        }
+    }
 
     //TODO Put parsing somewhere else
     private Optional<EquipmentAddress> parseEquipmentAddress(String address) {
@@ -196,6 +320,15 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
                         break;
                     case "maximalValue":
                         hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_offset":
+                        hardwareAddress.setOffset(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_multiplier":
+                        hardwareAddress.setMultiplier(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_threshold":
+                        hardwareAddress.setThreshold(Double.parseDouble(entry.getValue().toString()));
                         break;
                     default:
                         break;

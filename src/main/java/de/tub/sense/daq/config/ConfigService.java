@@ -89,7 +89,8 @@ public class ConfigService {
     protected void updateDataTag(DataTag dataTag) {
         cern.c2mon.shared.client.configuration.api.tag.DataTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.DataTag.update(dataTag.getId())
                 .address(new DataTagAddress(getSimpleHardwareAddress(dataTag.getAddress().getStartAddress(),
-                        dataTag.getAddress().getValueCount(), dataTag.getAddress().getType())))
+                        dataTag.getAddress().getValueCount(), dataTag.getAddress().getType(), dataTag.getAddress().getOffset(),
+                        dataTag.getAddress().getMultiplier(), dataTag.getAddress().getThreshold())))
                 .dataType(dataTypeClass(dataTag.getDataType()))
                 .build();
         configurationService.updateDataTag(updatedTag);
@@ -240,8 +241,10 @@ public class ConfigService {
      * @param registerType  of the related register
      * @param valueCount    of the related register
      */
-    protected void createDataTag(String equipmentName, String tagName, String datatype, int startAddress, String registerType, int valueCount) {
-        configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype), new DataTagAddress(getSimpleHardwareAddress(startAddress, valueCount, registerType)));
+    protected void createDataTag(String equipmentName, String tagName, String datatype, int startAddress,
+                                 String registerType, int valueCount, double offset, double multiplier, double threshold) {
+        configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype),
+                new DataTagAddress(getSimpleHardwareAddress(startAddress, valueCount, registerType, offset, multiplier, threshold)));
     }
 
     /**
@@ -252,8 +255,9 @@ public class ConfigService {
      * @param registerType of the register (e.g. holding32)
      * @return SimpleHardwareAddressImpl object for the given arguments, which can be sent to the C2mon server
      */
-    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType) {
-        return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":" + valueCount + ",\"readingType\":\"" + registerType + "\"}");
+    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double offset, double multiplier, double threshold) {
+        return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":"
+                + valueCount + ",\"readingType\":\"" + registerType + "\", \"value_offset\":" + offset + ",\"value_multiplier\":" + multiplier + ",\"value_threshold\":" + threshold + "}");
     }
 
     /**

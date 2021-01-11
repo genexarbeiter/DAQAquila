@@ -121,8 +121,8 @@ public class ProcessConfigurationParser {
     }
 
     private Optional<HardwareAddress> parseHardwareAddress(String address) {
-        if (log.isDebugEnabled()) {
-            log.debug("Parsing hardware address {}", address);
+        if (log.isTraceEnabled()) {
+            log.trace("Parsing hardware address {}", address);
         }
         HardwareAddress hardwareAddress = new HardwareAddress();
         ObjectMapper mapper = new ObjectMapper();
@@ -147,6 +147,15 @@ public class ProcessConfigurationParser {
                     case "maximalValue":
                         hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
                         break;
+                    case "value_offset":
+                        hardwareAddress.setOffset(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_multiplier":
+                        hardwareAddress.setMultiplier(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_threshold":
+                        hardwareAddress.setThreshold(Double.parseDouble(entry.getValue().toString()));
+                        break;
                     default:
                         log.warn("Unrecognized hardware address key: {}", entry.getKey());
                         break;
@@ -160,8 +169,8 @@ public class ProcessConfigurationParser {
     }
 
     private Optional<EquipmentAddress> parseEquipmentAddress(String address) {
-        if (log.isDebugEnabled()) {
-            log.debug("Parsing equipment address {}", address);
+        if (log.isTraceEnabled()) {
+            log.trace("Parsing equipment address {}", address);
         }
         EquipmentAddress equipmentAddress = new EquipmentAddress();
         ObjectMapper mapper = new ObjectMapper();
