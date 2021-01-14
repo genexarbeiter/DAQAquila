@@ -101,7 +101,6 @@ public class ConfigInitializer implements CommandLineRunner {
      * if there is already a process for this DAQ configured on the C2mon server.
      */
     private void updateC2monConfiguration() {
-        log.debug("Updating C2mon configuration...");
         ConfigurationFile configurationFile = configService.getConfigurationFile();
         ArrayList<EquipmentUnit> equipmentUnits = configService.getEquipmentUnits();
         for (Equipment equipment : configurationFile.getEquipments()) {
@@ -155,21 +154,25 @@ public class ConfigInitializer implements CommandLineRunner {
                     updateSignal(signal, dataTag);
                 }
             }
+            for (CommandTag commandTag : currentEquipmentUnit.getCommandTags()) {
+                if (commandTag.getName().equals(updatedEquipment.getName() + "/" + signal.getName())) {
+                    signalExists = true;
+                    updateSignal(signal, commandTag);
+                }
+            }
             //TODO Do it also for command tags
             if (!signalExists) {
                 if (log.isDebugEnabled()) {
                     log.debug("Data tag {} not found. Creating a new Data tag...", signal.getName());
                 }
-                configService.createDataTag(currentEquipmentUnit.getName(), signal.getName(), signal.getType(),
-                        signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
-                        signal.getOffset(), signal.getMultiplier(), signal.getThreshold());
+                createTagFromSignal(signal, currentEquipmentUnit.getName());
             }
         }
 
     }
 
     /**
-     * Updates a signal. Needs the updated signal from config file, and the current corresponding
+     * Updates a read signal. Needs the updated signal from config file, and the current corresponding
      * data tag from the C2mon server
      *
      * @param signal  from the config file
@@ -180,13 +183,49 @@ public class ConfigInitializer implements CommandLineRunner {
             log.debug("Updating data tag {} with id {}...", signal.getName(), dataTag.getId());
         }
         dataTag.setDataType(signal.getType());
-        dataTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(), signal.getModbus().getRegister()));
+        dataTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
+                signal.getModbus().getRegister(), signal.getOffset(), signal.getMultiplier(), signal.getThreshold()));
         configService.updateDataTag(dataTag);
     }
 
-    //TODO code it
-    private void updateSignal(Signal signal, CommandTag commandTag) {
+    /**
+     * Creates a data or command tag from a signal. Needs the signal from the config file and the equipments name
+     *
+     * @param signal        from the config file
+     * @param equipmentName of the signal
+     */
+    private void createTagFromSignal(Signal signal, String equipmentName) {
+        if (log.isDebugEnabled()) {
+            log.debug("Creating signal with tag {}...", signal.getName());
+        }
+        if (signal.getModbus().getType().equals("read")) {
+            configService.createDataTag(equipmentName, signal.getName(), signal.getType(),
+                    signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
+                    signal.getOffset(), signal.getMultiplier(), signal.getThreshold());
+        } else if (signal.getModbus().getType().equals("write")) {
+            configService.createCommandTag(equipmentName, signal.getName(), signal.getType(),
+                    signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
+                    signal.getMin(), signal.getMax());
+        } else {
+            log.error("Unrecognized modbus type {} for signal {}", signal.getModbus().getType(), signal.getName());
+        }
+    }
 
+    /**
+     * Updates a write signal. Needs the updated signal from config file, and the corresponding
+     * command tag from the C2mon Server
+     *
+     * @param signal     from the config file
+     * @param commandTag from the C2mon server
+     */
+    private void updateSignal(Signal signal, CommandTag commandTag) {
+        if (log.isDebugEnabled()) {
+            log.debug("Updating command tag {} with id {}...", signal.getName(), commandTag.getId());
+        }
+        commandTag.setDataType(signal.getType());
+        commandTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
+                signal.getModbus().getRegister(), signal.getMin(), signal.getMax()));
+        configService.updateCommandTag(commandTag);
     }
 
     /**

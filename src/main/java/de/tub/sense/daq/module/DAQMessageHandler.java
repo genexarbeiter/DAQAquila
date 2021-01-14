@@ -2,30 +2,19 @@ package de.tub.sense.daq.module;
 
 import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.common.IEquipmentMessageSender;
-import cern.c2mon.daq.tools.equipmentexceptions.EqIOException;
 import cern.c2mon.shared.common.datatag.ISourceDataTag;
 import cern.c2mon.shared.common.datatag.ValueUpdate;
 import cern.c2mon.shared.common.process.IEquipmentConfiguration;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.tub.sense.daq.config.xml.EquipmentAddress;
 import de.tub.sense.daq.config.xml.HardwareAddress;
 import de.tub.sense.daq.modbus.ModbusTCPService;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.IOException;
-import java.io.StringReader;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -36,12 +25,13 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Slf4j
+@NoArgsConstructor
 public class DAQMessageHandler extends EquipmentMessageHandler {
 
     private final HashMap<Long, Object> valueCache = new HashMap<>();
     private final HashMap<Long, HardwareAddress> addressCache = new HashMap<>();
     private final HashMap<Long, String> dataTypeCache = new HashMap<>();
-    IEquipmentMessageSender equipmentMessageSender;
+    private IEquipmentMessageSender equipmentMessageSender;
     private boolean autoRefreshRunning = false;
     private IEquipmentConfiguration equipmentConfiguration;
     private ModbusTCPService modbusTCPService;
@@ -49,9 +39,6 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     private int threshold_skipped = 0;
     private int tagCount = 0;
     private boolean performanceMode = false;
-
-    public DAQMessageHandler() {
-    }
 
     /**
      * Perform the necessary tasks to connect to the underlying data source. The
@@ -64,7 +51,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         checkPerformanceMode();
         equipmentConfiguration = getEquipmentConfiguration();
         equipmentMessageSender = getEquipmentMessageSender();
-        EquipmentAddress equipmentAddress = parseEquipmentAddress(
+        EquipmentAddress equipmentAddress = EquipmentAddress.parseEquipmentAddress(
                 equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new);
         modbusTCPService = new ModbusTCPService();
         int triedConnection = 0;
@@ -91,11 +78,9 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
 
     /**
      * Disconnect and release any resources to allow a clean shutdown.
-     *
-     * @throws EqIOException if an error occurs while disconnecting.
      */
     @Override
-    public void disconnectFromDataSource() throws EqIOException {
+    public void disconnectFromDataSource() {
         log.info("Disconnecting from datasource...");
         modbusTCPService.disconnect();
         log.info("Disconnected from datasource.");
@@ -108,7 +93,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
     @Override
     public void refreshAllDataTags() {
         log.info("Refreshing all data tags...");
-        if(!modbusTCPService.isConnected()) {
+        if (!modbusTCPService.isConnected()) {
             log.warn("Modbus TCP connection lost, trying to reconnect...");
             connectToDataSource();
         }
@@ -145,8 +130,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
             String datatype;
             if (!autoRefreshRunning) {
                 ISourceDataTag dataTag = equipmentConfiguration.getSourceDataTag(tagId);
-                hardwareAddress = parseHardwareAddress(
-                        dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
+                hardwareAddress = HardwareAddress.parseHardwareAddress(dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
                 datatype = dataTag.getDataType();
                 addressCache.put(tagId, hardwareAddress);
                 dataTypeCache.put(tagId, datatype);
@@ -156,7 +140,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
             }
 
             log.trace("Retrieving tag value from modbus tcp service...");
-            Optional<Object> value = modbusTCPService.getValue(tagId, hardwareAddress, datatype);
+            Optional<Object> value = modbusTCPService.getValue(hardwareAddress, datatype);
             if (!value.isPresent()) {
                 log.warn("Failed to read value from tagId {}, skipping update", tagId);
                 return;
@@ -178,7 +162,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
                 if (valueObject instanceof Float) {
                     float valueFloat = (float) valueObject;
                     float prevFloat = (float) prevValue;
-                    if(Math.abs(valueFloat - prevFloat) > threshold) {
+                    if (Math.abs(valueFloat - prevFloat) > threshold) {
                         valueFloat *= multiplier;
                         valueFloat += offset;
                         equipmentMessageSender.update(tagId, new ValueUpdate(valueFloat));
@@ -211,7 +195,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
                 } else if (valueObject instanceof Double) {
                     double valueDouble = (double) valueObject;
                     double prevDouble = (double) prevValue;
-                    if(Math.abs(valueDouble - prevDouble) > threshold) {
+                    if (Math.abs(valueDouble - prevDouble) > threshold) {
                         valueDouble *= multiplier;
                         valueDouble += offset;
                         equipmentMessageSender.update(tagId, new ValueUpdate(valueDouble));
@@ -246,12 +230,16 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         long delay = Long.parseLong(System.getProperty("c2mon.daq.refreshDelay"));
         ThreadFactory refreshThreadFactory =
                 new ThreadFactoryBuilder().setNameFormat(equipmentConfiguration.getId() + " REFRESH").build();
-        ScheduledFuture<?> future = Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(() -> {
+        Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(() -> {
             autoRefreshRunning = true;
             refreshAllDataTags();
         }, delay, delay, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Checks if performance mode environment variable,
+     * if its true, the performance mode is enabled, if not it stays disabled
+     */
     private void checkPerformanceMode() {
         if (Boolean.parseBoolean(System.getProperty("c2mon.daq.performanceMode"))) {
             performanceMode = true;
@@ -260,109 +248,4 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
             log.info("Performance mode disabled");
         }
     }
-
-    //TODO Put parsing somewhere else
-    private Optional<EquipmentAddress> parseEquipmentAddress(String address) {
-        EquipmentAddress equipmentAddress = new EquipmentAddress();
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            HashMap<String, Object> map = mapper.readValue(address, HashMap.class);
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                switch (entry.getKey()) {
-                    case "host":
-                        equipmentAddress.setHost(String.valueOf(entry.getValue()));
-                        break;
-                    case "port":
-                        equipmentAddress.setPort((int) entry.getValue());
-                        break;
-                    case "unitID":
-                        equipmentAddress.setUnitId((int) entry.getValue());
-                        break;
-                    case "delay":
-                        equipmentAddress.setDelay((int) entry.getValue());
-                        break;
-                    case "timeUnit":
-                        equipmentAddress.setTimeUnit(String.valueOf(entry.getValue()));
-                        break;
-                    default:
-                        log.warn("Unrecognized equipment address key: {}", entry.getKey());
-                        break;
-                }
-            }
-            return Optional.of(equipmentAddress);
-        } catch (IOException e) {
-            log.warn("Could not parse equipment address from string", e);
-            return Optional.empty();
-        }
-    }
-
-    private Optional<HardwareAddress> parseHardwareAddress(String xmlAddress) {
-        String address = parseXMLHardwareAddress(xmlAddress).orElseThrow(RuntimeException::new);
-        HardwareAddress hardwareAddress = new HardwareAddress();
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            HashMap<String, Object> map = mapper.readValue(address, HashMap.class);
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                switch (entry.getKey()) {
-                    case "startAddress":
-                        hardwareAddress.setStartAddress((int) entry.getValue());
-                        break;
-                    case "writeValueCount":
-                    case "readValueCount":
-                        hardwareAddress.setValueCount((int) entry.getValue());
-                        break;
-                    case "readingType":
-                    case "writingType":
-                        hardwareAddress.setType(String.valueOf(entry.getValue()));
-                        break;
-                    case "minimalValue":
-                        hardwareAddress.setMinValue(Double.parseDouble(entry.getValue().toString()));
-                        break;
-                    case "maximalValue":
-                        hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
-                        break;
-                    case "value_offset":
-                        hardwareAddress.setOffset(Double.parseDouble(entry.getValue().toString()));
-                        break;
-                    case "value_multiplier":
-                        hardwareAddress.setMultiplier(Double.parseDouble(entry.getValue().toString()));
-                        break;
-                    case "value_threshold":
-                        hardwareAddress.setThreshold(Double.parseDouble(entry.getValue().toString()));
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return Optional.of(hardwareAddress);
-        } catch (IOException e) {
-            log.warn("Could not parse hardware address from string", e);
-            return Optional.empty();
-        }
-    }
-
-    private Optional<String> parseXMLHardwareAddress(String xml) {
-        Document document = convertStringToXMLDocument(xml).orElseThrow(() -> new RuntimeException("Failed parsing xml string."));
-        return Optional.of(document.getElementsByTagName("address").item(0).getTextContent());
-    }
-
-    private Optional<Document> convertStringToXMLDocument(String xmlString) {
-        //Parser that produces DOM object trees from XML content
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-        //API to obtain DOM Document instance
-        DocumentBuilder builder = null;
-        try {
-            //Create DocumentBuilder with default configuration
-            builder = factory.newDocumentBuilder();
-
-            //Parse the content to Document object
-            Document doc = builder.parse(new InputSource(new StringReader(xmlString.replaceAll("\n", ""))));
-            return Optional.of(doc);
-        } catch (Exception e) {
-            log.warn("Could not parse XML-String to XML-Document", e);
-            return Optional.empty();
-        }
-    }
-
 }

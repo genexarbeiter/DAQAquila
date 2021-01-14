@@ -17,4 +17,5 @@ public class CommandTag extends Tag {
 
     private String sourceTimeout;
     private String sourceRetries;
+    private String dataType;
 }

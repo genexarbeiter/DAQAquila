@@ -47,21 +47,55 @@ public class ModbusTCPService {
         return false;
     }
 
+    public void putValue(HardwareAddress hardwareAddress, Object value) {
+        if(value instanceof Integer) {
+            try {
+                tcpModbusSocket.writeRegister(hardwareAddress.getStartAddress(), (int) value);
+            } catch (Exception e) {
+                log.warn("Could not write register with startAddress " + hardwareAddress.getStartAddress(), e);
+            }
+        } else if (value instanceof Boolean) {
+            try {
+                tcpModbusSocket.writeCoil(hardwareAddress.getStartAddress(), (boolean) value);
+            } catch (Exception e) {
+                log.warn("Could not write coil with startAddress " + hardwareAddress.getStartAddress(), e);
+            }
+        } else {
+            log.warn("Could not put value in register with startAddress {}", hardwareAddress.getStartAddress());
+        }
+    }
+
+    public void putIntValues(HardwareAddress hardwareAddress, int[] values) {
+        try {
+            tcpModbusSocket.writeRegisters(hardwareAddress.getStartAddress(), values);
+        }catch (Exception e) {
+            log.warn("Could not write registers with startAddress " + hardwareAddress.getStartAddress(), e);
+        }
+    }
+
+    public void putBooleanValues(HardwareAddress hardwareAddress, boolean[] values) {
+        try {
+            tcpModbusSocket.writeCoils(hardwareAddress.getStartAddress(), values);
+        }catch (Exception e) {
+            log.warn("Could not write coils with startAddress " + hardwareAddress.getStartAddress(), e);
+        }
+    }
+
     //TODO handle more holding types than just 'holding32' holding32 is most common and therefor used for development
-    public Optional<Object> getValue(long dataTagId, HardwareAddress hardwareAddress, String dataType) {
+    public Optional<Object> getValue(HardwareAddress hardwareAddress, String dataType) {
         if (hardwareAddress.getType().equals("holding32")) {
             try {
                 return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
                         hardwareAddress.getValueCount()), dataType));
             } catch (Exception e) {
-                log.warn("Could not read holding register with tagId " + dataTagId, e);
+                log.warn("Could not read holding register with startAddress " + hardwareAddress.getStartAddress(), e);
                 return Optional.empty();
             }
         } else if (hardwareAddress.getType().equals("coil")) {
             try {
                 return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
             } catch (Exception e) {
-                log.warn("Could not read coil register with tagName " + dataTagId, e);
+                log.warn("Could not read coil with startAddress " + hardwareAddress.getStartAddress(), e);
                 return Optional.empty();
             }
         } else {

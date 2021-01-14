@@ -5,8 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +27,7 @@ import java.util.Optional;
 @Setter
 @ToString
 @NoArgsConstructor
+@Slf4j
 public class HardwareAddress {
 
     private int startAddress;
@@ -32,12 +39,6 @@ public class HardwareAddress {
     private double multiplier;
     private double threshold;
 
-    public HardwareAddress(int startAddress, int valueCount, String type) {
-        this.startAddress = startAddress;
-        this.valueCount = valueCount;
-        this.type = type;
-    }
-
     public HardwareAddress(int startAddress, int valueCount, String type, double minValue, double maxValue) {
         this.startAddress = startAddress;
         this.valueCount = valueCount;
@@ -46,7 +47,18 @@ public class HardwareAddress {
         this.maxValue = maxValue;
     }
 
-    public static Optional<HardwareAddress> fromXMLString(String address) {
+    public HardwareAddress(int startAddress, int valueCount, String type, double offset, double multiplier, double threshold) {
+        this.startAddress = startAddress;
+        this.valueCount = valueCount;
+        this.type = type;
+        this.offset = offset;
+        this.multiplier = multiplier;
+        this.threshold = threshold;
+    }
+
+
+    public static Optional<HardwareAddress> parseHardwareAddress(String xmlAddress) {
+        String address = parseXMLHardwareAddress(xmlAddress).orElseThrow(RuntimeException::new);
         HardwareAddress hardwareAddress = new HardwareAddress();
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -70,12 +82,40 @@ public class HardwareAddress {
                     case "maximalValue":
                         hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
                         break;
+                    case "value_offset":
+                        hardwareAddress.setOffset(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_multiplier":
+                        hardwareAddress.setMultiplier(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "value_threshold":
+                        hardwareAddress.setThreshold(Double.parseDouble(entry.getValue().toString()));
+                        break;
                     default:
                         break;
                 }
             }
             return Optional.of(hardwareAddress);
         } catch (IOException e) {
+            log.warn("Could not parse hardware address from string", e);
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<String> parseXMLHardwareAddress(String xml) {
+        Document document = convertStringToXMLDocument(xml).orElseThrow(() -> new RuntimeException("Failed parsing xml string."));
+        return Optional.of(document.getElementsByTagName("address").item(0).getTextContent());
+    }
+
+    private static Optional<Document> convertStringToXMLDocument(String xmlString) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = null;
+        try {
+            builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new InputSource(new StringReader(xmlString.replaceAll("\n", ""))));
+            return Optional.of(doc);
+        } catch (Exception e) {
+            log.warn("Could not parse XML-String to XML-Document", e);
             return Optional.empty();
         }
     }

@@ -32,17 +32,20 @@ public class DAQMain {
 
     public static void main(String[] args) throws Exception {
         //Set environmental variables (only for development)
-        /*
-        System.setProperty("c2mon.daq.name", "P_CINERGIA_EL_20_DEV11");
+
+        System.setProperty("c2mon.daq.name", "DAQTEST_PROCESS_CINERGIA_4");
         System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.forceConfiguration", "false");
-        System.setProperty("c2mon.daq.refreshDelay", "100");*/
+        System.setProperty("c2mon.daq.refreshDelay", "10000");
+        System.setProperty("c2mon.daq.demo-config","true");
+
+        /*
         if (!loadEnvironment()) {
             return;
         }
-
+        */
         start(args);
     }
 

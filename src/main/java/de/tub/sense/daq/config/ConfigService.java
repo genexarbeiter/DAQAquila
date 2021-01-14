@@ -97,6 +97,23 @@ public class ConfigService {
     }
 
     /**
+     * Update a command tag on the C2mon server without deleting it
+     *
+     * @param commandTag you want to update
+     */
+    protected void updateCommandTag(CommandTag commandTag) {
+        cern.c2mon.shared.client.configuration.api.tag.CommandTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.CommandTag.update(commandTag.getId())
+                .minimum(commandTag.getAddress().getMinValue())
+                .maximum(commandTag.getAddress().getMaxValue())
+                .hardwareAddress(getSimpleHardwareAddress(commandTag.getAddress().getStartAddress(),
+                        commandTag.getAddress().getValueCount(), commandTag.getAddress().getType(),
+                        commandTag.getAddress().getMinValue(), commandTag.getAddress().getMaxValue()))
+                .dataType(dataTypeClass(commandTag.getDataType()))
+                .build();
+        configurationService.updateCommandTag(updatedTag);
+    }
+
+    /**
      * Update a equipment on the C2mon server without deleting it
      *
      * @param equipmentUnit you want to update
@@ -248,16 +265,62 @@ public class ConfigService {
     }
 
     /**
+     * Create a command tag for a given equipment
+     *
+     * @param equipmentName of the equipment
+     * @param tagName       of the tag
+     * @param datatype      of the tag
+     * @param startAddress  of the related register
+     * @param registerType  of the related register
+     * @param valueCount    of the related register
+     * @param min           of the related register
+     * @param max           of the related register
+     */
+    protected void createCommandTag(String equipmentName, String tagName, String datatype, int startAddress,
+                                    String registerType, int valueCount, double min, double max) {
+        //TODO Find out what these values mean
+        int clientTimeout = 100;
+        int execTimeout = 100;
+        int sourceTimeout = 100;
+        int sourceRetries = 10;
+        String rbacClass = "";
+        String rbacDevice = "";
+        String rbacProperty = "";
+
+        configurationService.createCommandTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype),
+                getSimpleHardwareAddress(startAddress, valueCount, registerType, min, max), clientTimeout,
+                execTimeout, sourceTimeout, sourceRetries, rbacClass, rbacDevice, rbacProperty);
+    }
+
+    /**
      * Parses a register with startAddress, valueCount and registerType to a SimpleHardwareAddressImplementation
      *
      * @param startAddress of the register
      * @param valueCount   of the register
      * @param registerType of the register (e.g. holding32)
+     * @param offset       of the value
+     * @param multiplier   of the value
+     * @param threshold    of the value
      * @return SimpleHardwareAddressImpl object for the given arguments, which can be sent to the C2mon server
      */
     private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double offset, double multiplier, double threshold) {
         return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":"
                 + valueCount + ",\"readingType\":\"" + registerType + "\", \"value_offset\":" + offset + ",\"value_multiplier\":" + multiplier + ",\"value_threshold\":" + threshold + "}");
+    }
+
+    /**
+     * Parses a register with start address, value count, register type, minimum and maximum to a SimpleHardwareAddressImplementation
+     *
+     * @param startAddress of the register
+     * @param valueCount   of the register
+     * @param registerType of the register
+     * @param min          of the value
+     * @param max          of the value
+     * @return SimpleHardwareAddressImpl object for the given arguments, which can be sent to the C2mon server
+     */
+    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double min, double max) {
+        return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"writeValueCount\":"
+                + valueCount + ",\"writingType\":\"" + registerType + "\", \"minimum\":" + min + ",\"maximum\":" + max + "}");
     }
 
     /**

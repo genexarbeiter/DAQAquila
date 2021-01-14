@@ -34,11 +34,13 @@ public class DAQConfigurationParser {
      * Load the demo config file from classpath
      */
     private void loadFile() {
-        //Just for development, later file is fetched from server
         try {
-            File daqConfigFile = new File("daq-config.yaml");
-            daqConfigFileStream = new FileInputStream(daqConfigFile);
-            //daqConfigFileStream = new ClassPathResource("demo_config2.yaml").getInputStream();
+            if(System.getProperties().containsKey("c2mon.daq.demo-config") && System.getProperty("c2mon.daq.demo-config").equals("true")) {
+                daqConfigFileStream = new ClassPathResource("demo_config.yaml").getInputStream();
+            } else {
+                File daqConfigFile = new File("daq-config.yaml");
+                daqConfigFileStream = new FileInputStream(daqConfigFile);
+            }
         } catch (IOException e) {
             log.error("Failed to load yaml configuration. " +
                     "How to solve it: In Docker volume root the file 'daq-config.yaml' has to be placed.", e);
