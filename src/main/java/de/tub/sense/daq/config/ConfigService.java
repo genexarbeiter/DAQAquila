@@ -107,7 +107,7 @@ public class ConfigService {
                 .maximum(commandTag.getAddress().getMaxValue())
                 .hardwareAddress(getSimpleHardwareAddress(commandTag.getAddress().getStartAddress(),
                         commandTag.getAddress().getValueCount(), commandTag.getAddress().getType(),
-                        commandTag.getAddress().getMinValue(), commandTag.getAddress().getMaxValue()))
+                        commandTag.getAddress().getMinValue(), commandTag.getAddress().getMaxValue(), commandTag.getAddress().getBitNumber()))
                 .dataType(dataTypeClass(commandTag.getDataType()))
                 .build();
         configurationService.updateCommandTag(updatedTag);
@@ -163,11 +163,17 @@ public class ConfigService {
             for (EquipmentUnit equipmentUnit : getEquipmentUnits()) {
                 log.debug("Removing data tags");
                 for (DataTag dataTag : equipmentUnit.getDataTags()) {
+                    if(log.isDebugEnabled()) {
+                        log.debug("Removing data tag {}...", dataTag.getName());
+                    }
                     configurationService.removeDataTagById(dataTag.getId());
                 }
                 log.debug("Removing command tags");
                 for (CommandTag commandTag : equipmentUnit.getCommandTags()) {
                     configurationService.removeCommandTagById(commandTag.getId());
+                    if(log.isDebugEnabled()) {
+                        log.debug("Removing command tag {}...", commandTag.getName());
+                    }
                 }
                 log.debug("Removing equipment");
                 configurationService.removeCommandTagById(equipmentUnit.getCommfaultTagId());
@@ -277,18 +283,18 @@ public class ConfigService {
      * @param max           of the related register
      */
     protected void createCommandTag(String equipmentName, String tagName, String datatype, int startAddress,
-                                    String registerType, int valueCount, double min, double max) {
+                                    String registerType, int valueCount, double min, double max, int bitNumber) {
         //TODO Find out what these values mean
-        int clientTimeout = 100;
-        int execTimeout = 100;
-        int sourceTimeout = 100;
-        int sourceRetries = 10;
-        String rbacClass = "";
-        String rbacDevice = "";
-        String rbacProperty = "";
+        int clientTimeout = 5001; // Client timeout: must be >= 5000
+        int execTimeout = 5000; // Execution timeout: must > (source retries + 1) * source timeout
+        int sourceTimeout = 1001; // Source timeout: must be >= 1000
+        int sourceRetries = 2; // Source retries
+        String rbacClass = "foo"; // Must at least contain one non white space character, not used at SENSE
+        String rbacDevice = "foo"; // Must at least contain one non white space character, not used at SENSE
+        String rbacProperty = "foo"; // Must at least contain one non white space character, not used at SENSE
 
         configurationService.createCommandTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype),
-                getSimpleHardwareAddress(startAddress, valueCount, registerType, min, max), clientTimeout,
+                getSimpleHardwareAddress(startAddress, valueCount, registerType, min, max, bitNumber), clientTimeout,
                 execTimeout, sourceTimeout, sourceRetries, rbacClass, rbacDevice, rbacProperty);
     }
 
@@ -318,9 +324,9 @@ public class ConfigService {
      * @param max          of the value
      * @return SimpleHardwareAddressImpl object for the given arguments, which can be sent to the C2mon server
      */
-    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double min, double max) {
+    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double min, double max, int bitNumber) {
         return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"writeValueCount\":"
-                + valueCount + ",\"writingType\":\"" + registerType + "\", \"minimum\":" + min + ",\"maximum\":" + max + "}");
+                + valueCount + ",\"writingType\":\"" + registerType + "\", \"minimum\":" + min + ",\"maximum\":" + max + ",\"bitNumber\":" + bitNumber + "}");
     }
 
     /**

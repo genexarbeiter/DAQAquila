@@ -1,10 +1,13 @@
 package de.tub.sense.daq.module;
 
 import cern.c2mon.daq.common.EquipmentMessageHandler;
+import cern.c2mon.daq.common.ICommandRunner;
 import cern.c2mon.daq.common.IEquipmentMessageSender;
+import cern.c2mon.daq.tools.equipmentexceptions.EqCommandTagException;
 import cern.c2mon.shared.common.datatag.ISourceDataTag;
 import cern.c2mon.shared.common.datatag.ValueUpdate;
 import cern.c2mon.shared.common.process.IEquipmentConfiguration;
+import cern.c2mon.shared.daq.command.SourceCommandTagValue;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.tub.sense.daq.config.xml.EquipmentAddress;
 import de.tub.sense.daq.config.xml.HardwareAddress;
@@ -26,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @NoArgsConstructor
-public class DAQMessageHandler extends EquipmentMessageHandler {
+public class DAQMessageHandler extends EquipmentMessageHandler implements ICommandRunner {
 
     private final HashMap<Long, Object> valueCache = new HashMap<>();
     private final HashMap<Long, HardwareAddress> addressCache = new HashMap<>();
@@ -51,6 +54,8 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         checkPerformanceMode();
         equipmentConfiguration = getEquipmentConfiguration();
         equipmentMessageSender = getEquipmentMessageSender();
+        getEquipmentCommandHandler().setCommandRunner(this);
+
         EquipmentAddress equipmentAddress = EquipmentAddress.parseEquipmentAddress(
                 equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new);
         modbusTCPService = new ModbusTCPService();
@@ -148,6 +153,8 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
             Object valueObject = value.get();
             if (!autoRefreshRunning) {
                 valueCache.put(tagId, valueObject);
+                equipmentMessageSender.update(tagId, new ValueUpdate(valueObject));
+                return;
             }
             Object prevValue = valueCache.get(tagId);
             if (prevValue.equals(valueObject)) {
@@ -247,5 +254,18 @@ public class DAQMessageHandler extends EquipmentMessageHandler {
         } else {
             log.info("Performance mode disabled");
         }
+    }
+
+    @Override
+    public String runCommand(SourceCommandTagValue sourceCommandTagValue) throws EqCommandTagException {
+        if (log.isDebugEnabled()) {
+            log.debug("Running command {}", sourceCommandTagValue.getName());
+        }
+        HardwareAddress hardwareAddress = HardwareAddress.parseHardwareAddress(
+                equipmentConfiguration.getSourceCommandTag(sourceCommandTagValue.getId()).getHardwareAddress().toConfigXML())
+                .orElseThrow(RuntimeException::new);
+        modbusTCPService.putValue(hardwareAddress, sourceCommandTagValue.getValue(), sourceCommandTagValue.getDataType());
+        log.info("SourceCommandTagValue eq {}, dt {}, val {}", sourceCommandTagValue.getEquipmentId(), sourceCommandTagValue.getDataType(), sourceCommandTagValue.getValue());
+        return "Executed command successful";
     }
 }

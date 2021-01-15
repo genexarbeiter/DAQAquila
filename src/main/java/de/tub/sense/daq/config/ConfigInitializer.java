@@ -88,10 +88,7 @@ public class ConfigInitializer implements CommandLineRunner {
             configService.createEquipment(equipment.getName(), HANDLER_CLASS_NAME, equipment.getAliveTagInterval(),
                     connectionSettings.getAddress(), connectionSettings.getPort(), connectionSettings.getUnitID());
             for (Signal signal : equipment.getSignals()) {
-                Modbus modbus = signal.getModbus();
-                configService.createDataTag(equipment.getName(), signal.getName(), signal.getType(),
-                        modbus.getStartAddress(), modbus.getRegister(), modbus.getCount(),
-                        signal.getOffset(), signal.getMultiplier(), signal.getThreshold());
+                createTagFromSignal(signal, equipment.getName());
             }
         }
     }
@@ -163,7 +160,7 @@ public class ConfigInitializer implements CommandLineRunner {
             //TODO Do it also for command tags
             if (!signalExists) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Data tag {} not found. Creating a new Data tag...", signal.getName());
+                    log.debug("Signal {} not found. Creating a new tag...", signal.getName());
                 }
                 createTagFromSignal(signal, currentEquipmentUnit.getName());
             }
@@ -196,7 +193,7 @@ public class ConfigInitializer implements CommandLineRunner {
      */
     private void createTagFromSignal(Signal signal, String equipmentName) {
         if (log.isDebugEnabled()) {
-            log.debug("Creating signal with tag {}...", signal.getName());
+            log.debug("Creating signal for tag {}...", signal.getName());
         }
         if (signal.getModbus().getType().equals("read")) {
             configService.createDataTag(equipmentName, signal.getName(), signal.getType(),
@@ -205,7 +202,7 @@ public class ConfigInitializer implements CommandLineRunner {
         } else if (signal.getModbus().getType().equals("write")) {
             configService.createCommandTag(equipmentName, signal.getName(), signal.getType(),
                     signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
-                    signal.getMin(), signal.getMax());
+                    signal.getMin(), signal.getMax(), signal.getModbus().getBitNumber());
         } else {
             log.error("Unrecognized modbus type {} for signal {}", signal.getModbus().getType(), signal.getName());
         }
@@ -224,7 +221,7 @@ public class ConfigInitializer implements CommandLineRunner {
         }
         commandTag.setDataType(signal.getType());
         commandTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
-                signal.getModbus().getRegister(), signal.getMin(), signal.getMax()));
+                signal.getModbus().getRegister(), signal.getMin(), signal.getMax(), signal.getModbus().getBitNumber()));
         configService.updateCommandTag(commandTag);
     }
 

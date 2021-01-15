@@ -141,11 +141,14 @@ public class ProcessConfigurationParser {
                     case "writingType":
                         hardwareAddress.setType(String.valueOf(entry.getValue()));
                         break;
-                    case "minimalValue":
+                    case "minimum":
                         hardwareAddress.setMinValue(Double.parseDouble(entry.getValue().toString()));
                         break;
-                    case "maximalValue":
+                    case "maximum":
                         hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "bitnumber":
+                        hardwareAddress.setBitNumber(Integer.parseInt(entry.getValue().toString()));
                         break;
                     case "value_offset":
                         hardwareAddress.setOffset(Double.parseDouble(entry.getValue().toString()));

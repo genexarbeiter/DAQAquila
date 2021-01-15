@@ -38,13 +38,15 @@ public class HardwareAddress {
     private double offset;
     private double multiplier;
     private double threshold;
+    private int bitNumber;
 
-    public HardwareAddress(int startAddress, int valueCount, String type, double minValue, double maxValue) {
+    public HardwareAddress(int startAddress, int valueCount, String type, double minValue, double maxValue, int bitNumber) {
         this.startAddress = startAddress;
         this.valueCount = valueCount;
         this.type = type;
         this.minValue = minValue;
         this.maxValue = maxValue;
+        this.bitNumber = bitNumber;
     }
 
     public HardwareAddress(int startAddress, int valueCount, String type, double offset, double multiplier, double threshold) {
@@ -55,7 +57,6 @@ public class HardwareAddress {
         this.multiplier = multiplier;
         this.threshold = threshold;
     }
-
 
     public static Optional<HardwareAddress> parseHardwareAddress(String xmlAddress) {
         String address = parseXMLHardwareAddress(xmlAddress).orElseThrow(RuntimeException::new);
@@ -76,11 +77,14 @@ public class HardwareAddress {
                     case "writingType":
                         hardwareAddress.setType(String.valueOf(entry.getValue()));
                         break;
-                    case "minimalValue":
+                    case "minimum":
                         hardwareAddress.setMinValue(Double.parseDouble(entry.getValue().toString()));
                         break;
-                    case "maximalValue":
+                    case "maximum":
                         hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
+                        break;
+                    case "bitnumber":
+                        hardwareAddress.setBitNumber(Integer.parseInt(entry.getValue().toString()));
                         break;
                     case "value_offset":
                         hardwareAddress.setOffset(Double.parseDouble(entry.getValue().toString()));

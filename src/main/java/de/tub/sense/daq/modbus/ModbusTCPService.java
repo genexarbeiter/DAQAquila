@@ -9,6 +9,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -39,47 +40,35 @@ public class ModbusTCPService {
         }
     }
 
-    public boolean isConnected()  {
-        if(tcpModbusSocket != null) {
+    public boolean isConnected() {
+        if (tcpModbusSocket != null) {
             TCPMasterConnection connection = tcpModbusSocket.getConnection();
             return connection.isConnected();
         }
         return false;
     }
 
-    public void putValue(HardwareAddress hardwareAddress, Object value) {
-        if(value instanceof Integer) {
+    public void putValue(HardwareAddress hardwareAddress, Object value, String dataType) {
+        Object[] result = preDataProcessing(value, hardwareAddress, dataType).orElseThrow(RuntimeException::new);
+        if (result.length == 1) {
             try {
-                tcpModbusSocket.writeRegister(hardwareAddress.getStartAddress(), (int) value);
+                tcpModbusSocket.writeRegister(hardwareAddress.getStartAddress(), (int) result[0]);
             } catch (Exception e) {
-                log.warn("Could not write register with startAddress " + hardwareAddress.getStartAddress(), e);
-            }
-        } else if (value instanceof Boolean) {
-            try {
-                tcpModbusSocket.writeCoil(hardwareAddress.getStartAddress(), (boolean) value);
-            } catch (Exception e) {
-                log.warn("Could not write coil with startAddress " + hardwareAddress.getStartAddress(), e);
+                log.error("Could not write the value " + result[0] + " to register with startAddress " + hardwareAddress.getStartAddress(), e);
             }
         } else {
-            log.warn("Could not put value in register with startAddress {}", hardwareAddress.getStartAddress());
+            int[] intResult = new int[result.length];
+            for (int i = 0; i < intResult.length; i++) {
+                intResult[i] = (int) result[i];
+            }
+            try {
+                tcpModbusSocket.writeRegisters(hardwareAddress.getStartAddress(), intResult);
+            } catch (Exception e) {
+                log.error("Could not write values " + Arrays.stream(intResult).toString() + " write to register with startAddress " + hardwareAddress.getStartAddress(), e);
+            }
         }
     }
 
-    public void putIntValues(HardwareAddress hardwareAddress, int[] values) {
-        try {
-            tcpModbusSocket.writeRegisters(hardwareAddress.getStartAddress(), values);
-        }catch (Exception e) {
-            log.warn("Could not write registers with startAddress " + hardwareAddress.getStartAddress(), e);
-        }
-    }
-
-    public void putBooleanValues(HardwareAddress hardwareAddress, boolean[] values) {
-        try {
-            tcpModbusSocket.writeCoils(hardwareAddress.getStartAddress(), values);
-        }catch (Exception e) {
-            log.warn("Could not write coils with startAddress " + hardwareAddress.getStartAddress(), e);
-        }
-    }
 
     //TODO handle more holding types than just 'holding32' holding32 is most common and therefor used for development
     public Optional<Object> getValue(HardwareAddress hardwareAddress, String dataType) {
@@ -180,5 +169,93 @@ public class ModbusTCPService {
             }
             return respValues;
         }
+    }
+
+    public Optional<Object[]> preDataProcessing(final Object writeValue, HardwareAddress hardwareAddress, String dataType) {
+        if (hardwareAddress.getType().equals("holding32") ||
+                hardwareAddress.getType().equals("holding64")) {
+            final Integer[] result = new Integer[hardwareAddress.getValueCount()];
+            ByteBuffer bb = ByteBuffer.allocate(2 * hardwareAddress.getValueCount());
+            byte[] bytes = null;
+            switch (hardwareAddress.getValueCount()) {
+                case 4:
+                    if (dataType.equals(Long.class.getCanonicalName())) {
+                        Number num = (Number) writeValue;
+                        bytes = bb.putLong(num.longValue()).array();
+                        break;
+                    }
+                    if (dataType.equals(Double.class.getCanonicalName())) {
+                        Number num = (Number) writeValue;
+                        bytes = bb.putDouble(num.doubleValue()).array();
+                    }
+                    break;
+                case 2:
+                    if (dataType.equals(Integer.class.getCanonicalName())) {
+                        bytes = bb.putInt((Integer) writeValue).array();
+                        break;
+                    }
+                    if (dataType.equals(Long.class.getCanonicalName())) {
+                        Number num = (Number) writeValue;
+                        bytes = bb.putInt(num.intValue()).array();
+                        break;
+                    }
+                    if (dataType.equals(Float.class.getCanonicalName())) {
+                        Number num = (Number) writeValue;
+                        bytes = bb.putFloat(num.floatValue()).array();
+                    }
+                    break;
+            }
+            if (bytes != null) {
+                log.debug(String.valueOf(bytes.length));
+                log.debug(Arrays.toString(bytes));
+                for (int i = 0; i < hardwareAddress.getValueCount(); i++) {
+                    log.debug("lower limit: " + (2 * i) + " upper limit: " + (2 * i + 2));
+                    short aShort = ByteBuffer.wrap(Arrays.copyOfRange(bytes, 2 * i, 2 * i + 2)).getShort();
+                    result[i] = (aShort < 0) ? (aShort + 65536) : aShort;
+                }
+                log.debug(Arrays.toString(result));
+                return Optional.of(result);
+            }
+            throw new RuntimeException("preDataProcessing: Cannot process data of type " + dataType +
+                    " for write value count " + hardwareAddress.getValueCount() +
+                    " from holding32/64 register");
+        }
+        if (hardwareAddress.getType().equals("holding") && dataType.equals(Boolean.class.getCanonicalName())) {
+            try {
+                short registerValue = (short) getValue(hardwareAddress, "java.lang.Short").orElseThrow(RuntimeException::new);
+                if ((boolean) writeValue) {
+                    registerValue |= hardwareAddress.getBitNumber() << 1;
+                } else {
+                    registerValue |= hardwareAddress.getBitNumber();
+                }
+                Object[] result = new Object[1];
+                result[0] = (int) registerValue;
+                return Optional.of(result);
+                    /*
+                    byte[] shortInBytes = new byte[2];
+                    shortInBytes[0] = (byte)(registerValue & 0xff);
+                    shortInBytes[1] = (byte)((registerValue >> 8) & 0xff);
+
+                    if(hardwareAddress.getBitNumber() <= 7) {
+                        if((boolean) writeValue) {
+                            shortInBytes[0] |= hardwareAddress.getBitNumber() << 1; //TRUE
+                        } else {
+                            shortInBytes[0] |= hardwareAddress.getBitNumber(); //FALSE
+                        }
+                    } else {
+                        if((boolean) writeValue) {
+                            shortInBytes[1] |= hardwareAddress.getBitNumber() - 8 << 1;
+                        } else {
+                            shortInBytes[1] |= hardwareAddress.getBitNumber();
+                        }
+                    }
+                    */
+
+            } catch (Exception e) {
+                log.error("Error while retrieving value for modbus holding register address " + hardwareAddress.getStartAddress(), e);
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
     }
 }
