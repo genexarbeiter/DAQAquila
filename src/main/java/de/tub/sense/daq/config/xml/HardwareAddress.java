@@ -49,17 +49,17 @@ public class HardwareAddress {
         this.bitNumber = bitNumber;
     }
 
-    public HardwareAddress(int startAddress, int valueCount, String type, double offset, double multiplier, double threshold) {
+    public HardwareAddress(int startAddress, int valueCount, String type, double offset, double multiplier, double threshold, int bitNumber) {
         this.startAddress = startAddress;
         this.valueCount = valueCount;
         this.type = type;
         this.offset = offset;
         this.multiplier = multiplier;
         this.threshold = threshold;
+        this.bitNumber = bitNumber;
     }
 
-    public static Optional<HardwareAddress> parseHardwareAddress(String xmlAddress) {
-        String address = parseXMLHardwareAddress(xmlAddress).orElseThrow(RuntimeException::new);
+    public static Optional<HardwareAddress> parseHardwareAddress(String address) {
         HardwareAddress hardwareAddress = new HardwareAddress();
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -83,7 +83,7 @@ public class HardwareAddress {
                     case "maximum":
                         hardwareAddress.setMaxValue(Double.parseDouble(entry.getValue().toString()));
                         break;
-                    case "bitnumber":
+                    case "bitNumber":
                         hardwareAddress.setBitNumber(Integer.parseInt(entry.getValue().toString()));
                         break;
                     case "value_offset":
@@ -96,6 +96,7 @@ public class HardwareAddress {
                         hardwareAddress.setThreshold(Double.parseDouble(entry.getValue().toString()));
                         break;
                     default:
+                        log.warn("Unrecognized hardware address key: {}", entry.getKey());
                         break;
                 }
             }
@@ -104,6 +105,11 @@ public class HardwareAddress {
             log.warn("Could not parse hardware address from string", e);
             return Optional.empty();
         }
+    }
+
+    public static Optional<HardwareAddress> parseHardwareAddressFromXML(String xmlAddress) {
+        String address = parseXMLHardwareAddress(xmlAddress).orElseThrow(RuntimeException::new);
+        return parseHardwareAddress(address);
     }
 
     private static Optional<String> parseXMLHardwareAddress(String xml) {

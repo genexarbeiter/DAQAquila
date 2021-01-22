@@ -19,8 +19,8 @@ public class Signal {
     private String type;
     private String description;
     private Modbus modbus;
-    private long min;
-    private long max;
+    private double min;
+    private double max;
     private double offset;
     private double multiplier;
     private double threshold;

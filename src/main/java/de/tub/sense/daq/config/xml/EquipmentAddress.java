@@ -27,12 +27,14 @@ public class EquipmentAddress {
     private int port;
     private int unitId;
     private int delay;
+    private int refreshInterval;
     private String timeUnit;
 
-    public EquipmentAddress(String host, int port, int unitId) {
+    public EquipmentAddress(String host, int port, int unitId, int refreshInterval) {
         this.host = host;
         this.port = port;
         this.unitId = unitId;
+        this.refreshInterval = refreshInterval;
     }
 
     public static Optional<EquipmentAddress> parseEquipmentAddress(String address) {
@@ -56,6 +58,9 @@ public class EquipmentAddress {
                         break;
                     case "timeUnit":
                         equipmentAddress.setTimeUnit(String.valueOf(entry.getValue()));
+                        break;
+                    case "refreshInterval":
+                        equipmentAddress.setRefreshInterval((int) entry.getValue());
                         break;
                     default:
                         log.warn("Unrecognized equipment address key: {}", entry.getKey());

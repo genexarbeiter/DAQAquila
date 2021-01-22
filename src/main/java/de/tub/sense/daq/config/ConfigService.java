@@ -12,6 +12,7 @@ import cern.c2mon.shared.common.datatag.address.impl.SimpleHardwareAddressImpl;
 import de.tub.sense.daq.config.file.ConfigurationFile;
 import de.tub.sense.daq.config.xml.CommandTag;
 import de.tub.sense.daq.config.xml.DataTag;
+import de.tub.sense.daq.config.xml.EquipmentAddress;
 import de.tub.sense.daq.config.xml.EquipmentUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 
 @Service
 @Slf4j
+@SuppressWarnings(value = "unused")
 public class ConfigService {
 
     private final DAQConfiguration daqConfiguration;
@@ -87,10 +89,13 @@ public class ConfigService {
      * @param dataTag you want to update
      */
     protected void updateDataTag(DataTag dataTag) {
+        if (dataTag.getAddress().getBitNumber() < 0 || dataTag.getAddress().getBitNumber() >= 15) {
+            throw new IllegalArgumentException("Bitnumber for tag " + dataTag.getName() + " is " + dataTag.getAddress().getBitNumber() + " but it has to be in the interval [0, 15]");
+        }
         cern.c2mon.shared.client.configuration.api.tag.DataTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.DataTag.update(dataTag.getId())
                 .address(new DataTagAddress(getSimpleHardwareAddress(dataTag.getAddress().getStartAddress(),
                         dataTag.getAddress().getValueCount(), dataTag.getAddress().getType(), dataTag.getAddress().getOffset(),
-                        dataTag.getAddress().getMultiplier(), dataTag.getAddress().getThreshold())))
+                        dataTag.getAddress().getMultiplier(), dataTag.getAddress().getThreshold(), dataTag.getAddress().getBitNumber())))
                 .dataType(dataTypeClass(dataTag.getDataType()))
                 .build();
         configurationService.updateDataTag(updatedTag);
@@ -102,6 +107,10 @@ public class ConfigService {
      * @param commandTag you want to update
      */
     protected void updateCommandTag(CommandTag commandTag) {
+        if (commandTag.getAddress().getMinValue() == commandTag.getAddress().getMaxValue() && commandTag.getAddress().getMaxValue() == 0) {
+            throw new IllegalArgumentException("Minimum and maximum for command tag " + commandTag.getName() + " is not set. " +
+                    "For a boolean it has to be [0, 1], for any other data type it is up to you. You can specify minimum and maximum for any signal in the config file");
+        }
         cern.c2mon.shared.client.configuration.api.tag.CommandTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.CommandTag.update(commandTag.getId())
                 .minimum(commandTag.getAddress().getMinValue())
                 .maximum(commandTag.getAddress().getMaxValue())
@@ -119,8 +128,9 @@ public class ConfigService {
      * @param equipmentUnit you want to update
      */
     protected void updateEquipment(EquipmentUnit equipmentUnit) {
+        EquipmentAddress address = equipmentUnit.getEquipmentAddress();
         Equipment equipment = Equipment.update(equipmentUnit.getId())
-                .address("{\"host\":\"" + equipmentUnit.getEquipmentAddress().getHost() + "\",\"port\":" + equipmentUnit.getEquipmentAddress().getPort() + ",\"unitID\":" + equipmentUnit.getEquipmentAddress().getUnitId() + "}")
+                .address(getEquipmentAddress(address.getHost(), address.getPort(), address.getUnitId(), address.getRefreshInterval()))
                 .aliveInterval(equipmentUnit.getAliveTagInterval())
                 .build();
         configurationService.updateEquipment(equipment);
@@ -163,7 +173,7 @@ public class ConfigService {
             for (EquipmentUnit equipmentUnit : getEquipmentUnits()) {
                 log.debug("Removing data tags");
                 for (DataTag dataTag : equipmentUnit.getDataTags()) {
-                    if(log.isDebugEnabled()) {
+                    if (log.isDebugEnabled()) {
                         log.debug("Removing data tag {}...", dataTag.getName());
                     }
                     configurationService.removeDataTagById(dataTag.getId());
@@ -171,7 +181,7 @@ public class ConfigService {
                 log.debug("Removing command tags");
                 for (CommandTag commandTag : equipmentUnit.getCommandTags()) {
                     configurationService.removeCommandTagById(commandTag.getId());
-                    if(log.isDebugEnabled()) {
+                    if (log.isDebugEnabled()) {
                         log.debug("Removing command tag {}...", commandTag.getName());
                     }
                 }
@@ -198,14 +208,14 @@ public class ConfigService {
      * @param port             of the equipment
      * @param unitId           of the equipment
      */
-    protected void createEquipment(String equipmentName, String handlerClassName, int aliveTagInterval, String host, long port, int unitId) {
+    protected void createEquipment(String equipmentName, String handlerClassName, int refreshInterval, int aliveTagInterval, String host, long port, int unitId) {
         if (log.isDebugEnabled()) {
             log.debug("Creating equipment {} for process {} with handlerClass {}", equipmentName, PROCESS_NAME, handlerClassName);
         }
         Equipment equipmentToCreate = Equipment.create(equipmentName, handlerClassName)
                 .aliveTag(AliveTag.create(equipmentName + ":ALIVE").build(), aliveTagInterval)
                 .statusTag(StatusTag.create(equipmentName + ":STATUS").build())
-                .address("{\"host\":\"" + host + "\",\"port\":" + port + ",\"unitID\":" + unitId + "}")
+                .address(getEquipmentAddress(host, port, unitId, refreshInterval))
                 .build();
 
         ConfigurationReport report = configurationService.createEquipment(PROCESS_NAME, equipmentToCreate);
@@ -232,8 +242,8 @@ public class ConfigService {
      * @param port             of the equipment
      * @param unitId           of the equipment
      */
-    protected void createEquipment(String equipmentName, String handlerClassName, String host, long port, int unitId) {
-        createEquipment(equipmentName, handlerClassName, 100000, host, port, unitId);
+    protected void createEquipment(String equipmentName, String handlerClassName, String host, int refreshInterval, long port, int unitId) {
+        createEquipment(equipmentName, handlerClassName, refreshInterval, 100000, host, port, unitId);
     }
 
     /**
@@ -265,9 +275,12 @@ public class ConfigService {
      * @param valueCount    of the related register
      */
     protected void createDataTag(String equipmentName, String tagName, String datatype, int startAddress,
-                                 String registerType, int valueCount, double offset, double multiplier, double threshold) {
+                                 String registerType, int valueCount, double offset, double multiplier, double threshold, int bitNumber) {
+        if (bitNumber < 0 || bitNumber >= 15) {
+            throw new IllegalArgumentException("Bitnumber for tag " + tagName + " is " + bitNumber + " but it has to be in the interval [0, 15]");
+        }
         configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype),
-                new DataTagAddress(getSimpleHardwareAddress(startAddress, valueCount, registerType, offset, multiplier, threshold)));
+                new DataTagAddress(getSimpleHardwareAddress(startAddress, valueCount, registerType, offset, multiplier, threshold, bitNumber)));
     }
 
     /**
@@ -284,7 +297,10 @@ public class ConfigService {
      */
     protected void createCommandTag(String equipmentName, String tagName, String datatype, int startAddress,
                                     String registerType, int valueCount, double min, double max, int bitNumber) {
-        //TODO Find out what these values mean
+        if (min == max && max == 0) {
+            throw new IllegalArgumentException("Minimum and maximum for command tag " + tagName + " is not set." +
+                    " For a boolean it has to be [0, 1], for any other data type it is up to you. You can specify minimum and maximum for any signal in the config file");
+        }
         int clientTimeout = 5001; // Client timeout: must be >= 5000
         int execTimeout = 5000; // Execution timeout: must > (source retries + 1) * source timeout
         int sourceTimeout = 1001; // Source timeout: must be >= 1000
@@ -292,10 +308,14 @@ public class ConfigService {
         String rbacClass = "foo"; // Must at least contain one non white space character, not used at SENSE
         String rbacDevice = "foo"; // Must at least contain one non white space character, not used at SENSE
         String rbacProperty = "foo"; // Must at least contain one non white space character, not used at SENSE
+        cern.c2mon.shared.client.configuration.api.tag.CommandTag commandTag = cern.c2mon.shared.client.configuration.api.tag.CommandTag.create(equipmentName + "/" + tagName,
+                dataTypeClass(datatype), getSimpleHardwareAddress(startAddress, valueCount, registerType, min, max, bitNumber),
+                clientTimeout, execTimeout, sourceTimeout, sourceRetries, rbacClass, rbacDevice, rbacProperty)
+                .minimum(min)
+                .maximum(max)
+                .build();
 
-        configurationService.createCommandTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype),
-                getSimpleHardwareAddress(startAddress, valueCount, registerType, min, max, bitNumber), clientTimeout,
-                execTimeout, sourceTimeout, sourceRetries, rbacClass, rbacDevice, rbacProperty);
+        configurationService.createCommandTag(equipmentName, commandTag);
     }
 
     /**
@@ -309,9 +329,9 @@ public class ConfigService {
      * @param threshold    of the value
      * @return SimpleHardwareAddressImpl object for the given arguments, which can be sent to the C2mon server
      */
-    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double offset, double multiplier, double threshold) {
+    private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double offset, double multiplier, double threshold, int bitNumber) {
         return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"readValueCount\":"
-                + valueCount + ",\"readingType\":\"" + registerType + "\", \"value_offset\":" + offset + ",\"value_multiplier\":" + multiplier + ",\"value_threshold\":" + threshold + "}");
+                + valueCount + ",\"readingType\":\"" + registerType + "\", \"value_offset\":" + offset + ",\"value_multiplier\":" + multiplier + ",\"value_threshold\":" + threshold + ",\"bitNumber\":" + bitNumber + "}");
     }
 
     /**
@@ -327,6 +347,19 @@ public class ConfigService {
     private SimpleHardwareAddressImpl getSimpleHardwareAddress(int startAddress, int valueCount, String registerType, double min, double max, int bitNumber) {
         return new SimpleHardwareAddressImpl("{\"startAddress\":" + startAddress + ",\"writeValueCount\":"
                 + valueCount + ",\"writingType\":\"" + registerType + "\", \"minimum\":" + min + ",\"maximum\":" + max + ",\"bitNumber\":" + bitNumber + "}");
+    }
+
+    /**
+     * Parses a equipment address with host port unit id and refresh interval to a valid equipment address string
+     *
+     * @param host            of the equipment
+     * @param port            of the equipment
+     * @param unitId          of the equipment
+     * @param refreshInterval of the equipment
+     * @return valid equipment address hashmap string
+     */
+    private String getEquipmentAddress(String host, long port, int unitId, int refreshInterval) {
+        return "{\"host\":\"" + host + "\",\"port\":" + port + ",\"unitID\":" + unitId + ",\"refreshInterval\":" + refreshInterval + "}";
     }
 
     /**

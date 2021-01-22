@@ -3,7 +3,6 @@ package de.tub.sense.daq.module;
 import cern.c2mon.daq.common.EquipmentMessageHandler;
 import cern.c2mon.daq.common.ICommandRunner;
 import cern.c2mon.daq.common.IEquipmentMessageSender;
-import cern.c2mon.daq.tools.equipmentexceptions.EqCommandTagException;
 import cern.c2mon.shared.common.datatag.ISourceDataTag;
 import cern.c2mon.shared.common.datatag.ValueUpdate;
 import cern.c2mon.shared.common.process.IEquipmentConfiguration;
@@ -97,10 +96,14 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
      */
     @Override
     public void refreshAllDataTags() {
-        log.info("Refreshing all data tags...");
+        log.info("Refreshing all data tags ...");
         if (!modbusTCPService.isConnected()) {
             log.warn("Modbus TCP connection lost, trying to reconnect...");
+            equipmentMessageSender.confirmEquipmentStateIncorrect("Modbus TCP connection lost, trying to reconnect...");
             connectToDataSource();
+            return;
+        } else {
+            equipmentMessageSender.confirmEquipmentStateOK("Everything fine.");
         }
         long millis = System.currentTimeMillis();
         skipped = 0;
@@ -135,7 +138,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
             String datatype;
             if (!autoRefreshRunning) {
                 ISourceDataTag dataTag = equipmentConfiguration.getSourceDataTag(tagId);
-                hardwareAddress = HardwareAddress.parseHardwareAddress(dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
+                hardwareAddress = HardwareAddress.parseHardwareAddressFromXML(dataTag.getHardwareAddress().toConfigXML()).orElseThrow(RuntimeException::new);
                 datatype = dataTag.getDataType();
                 addressCache.put(tagId, hardwareAddress);
                 dataTypeCache.put(tagId, datatype);
@@ -148,6 +151,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
             Optional<Object> value = modbusTCPService.getValue(hardwareAddress, datatype);
             if (!value.isPresent()) {
                 log.warn("Failed to read value from tagId {}, skipping update", tagId);
+                skipped++;
                 return;
             }
             Object valueObject = value.get();
@@ -178,6 +182,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
                         return;
                     }
                 } else if (valueObject instanceof Boolean) {
+                    log.debug("Boolean update: {}", (boolean) valueObject);
                     equipmentMessageSender.update(tagId, new ValueUpdate(valueObject));
                 } else if (valueObject instanceof Integer) {
                     int valueInt = (int) valueObject;
@@ -234,13 +239,12 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
      */
     private void startAutoRefresh() {
         log.debug("Enabling auto refresh...");
-        long delay = Long.parseLong(System.getProperty("c2mon.daq.refreshDelay"));
+        int delay = EquipmentAddress.parseEquipmentAddress(
+                equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new).getRefreshInterval();//Long.parseLong(System.getProperty("c2mon.daq.refreshDelay"));
         ThreadFactory refreshThreadFactory =
-                new ThreadFactoryBuilder().setNameFormat(equipmentConfiguration.getId() + " REFRESH").build();
-        Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(() -> {
-            autoRefreshRunning = true;
-            refreshAllDataTags();
-        }, delay, delay, TimeUnit.MILLISECONDS);
+                new ThreadFactoryBuilder().setNameFormat(String.valueOf(equipmentConfiguration.getId())).build();
+        Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(this::refreshAllDataTags, delay, delay, TimeUnit.MILLISECONDS);
+        autoRefreshRunning = true;
     }
 
     /**
@@ -256,16 +260,27 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
         }
     }
 
+    /**
+     * Is run by C2mon if a command is executed
+     *
+     * @param sourceCommandTagValue of the command
+     * @return String of the execution state
+     */
     @Override
-    public String runCommand(SourceCommandTagValue sourceCommandTagValue) throws EqCommandTagException {
+    public String runCommand(SourceCommandTagValue sourceCommandTagValue) {
         if (log.isDebugEnabled()) {
-            log.debug("Running command {}", sourceCommandTagValue.getName());
+            log.debug("Running command for tag {} in equipment {} with data type {} and value {}",
+                    sourceCommandTagValue.getName(), sourceCommandTagValue.getEquipmentId(),
+                    sourceCommandTagValue.getDataType(), sourceCommandTagValue.getValue());
         }
-        HardwareAddress hardwareAddress = HardwareAddress.parseHardwareAddress(
-                equipmentConfiguration.getSourceCommandTag(sourceCommandTagValue.getId()).getHardwareAddress().toConfigXML())
-                .orElseThrow(RuntimeException::new);
-        modbusTCPService.putValue(hardwareAddress, sourceCommandTagValue.getValue(), sourceCommandTagValue.getDataType());
-        log.info("SourceCommandTagValue eq {}, dt {}, val {}", sourceCommandTagValue.getEquipmentId(), sourceCommandTagValue.getDataType(), sourceCommandTagValue.getValue());
-        return "Executed command successful";
+        Optional<HardwareAddress> optionalHardwareAddress = HardwareAddress.parseHardwareAddressFromXML(
+                equipmentConfiguration.getSourceCommandTag(sourceCommandTagValue.getId()).getHardwareAddress().toConfigXML());
+        if (optionalHardwareAddress.isPresent()) {
+            modbusTCPService.putValue(optionalHardwareAddress.get(), sourceCommandTagValue.getValue(), sourceCommandTagValue.getDataType());
+            return "Success";
+        } else {
+            return "Could not parse hardware address. Failed.";
+        }
+
     }
 }

@@ -1,6 +1,8 @@
 package de.tub.sense.daq.config;
 
-import de.tub.sense.daq.config.file.*;
+import de.tub.sense.daq.config.file.ConfigurationFile;
+import de.tub.sense.daq.config.file.Equipment;
+import de.tub.sense.daq.config.file.Signal;
 import de.tub.sense.daq.config.xml.*;
 import de.tub.sense.daq.module.DAQMessageHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +38,9 @@ public class ConfigInitializer implements CommandLineRunner {
      * only updated, and nothing is deleted.
      *
      * @param args from start
-     * @throws Exception on exception
      */
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         if (loadConfigFromServer()) {
             log.debug("Configuration loaded from C2mon. Checking if force configuration is set to true...");
             if (FORCE_CONFIGURATION) {
@@ -84,9 +85,7 @@ public class ConfigInitializer implements CommandLineRunner {
         ConfigurationFile configurationFile = configService.getConfigurationFile();
         configService.createProcess();
         for (Equipment equipment : configurationFile.getEquipments()) {
-            ConnectionSettings connectionSettings = equipment.getConnectionSettings();
-            configService.createEquipment(equipment.getName(), HANDLER_CLASS_NAME, equipment.getAliveTagInterval(),
-                    connectionSettings.getAddress(), connectionSettings.getPort(), connectionSettings.getUnitID());
+            createEquipment(equipment);
             for (Signal signal : equipment.getSignals()) {
                 createTagFromSignal(signal, equipment.getName());
             }
@@ -109,19 +108,30 @@ public class ConfigInitializer implements CommandLineRunner {
                 }
             }
             if (!equipmentExists) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Equipment {} not found. Creating a new equipment...", equipment.getName());
-                }
-                int aliveTagInterval = equipment.getAliveTagInterval() == 0 ? 100000 : equipment.getAliveTagInterval();
-                configService.createEquipment(
-                        equipment.getName(),
-                        HANDLER_CLASS_NAME,
-                        aliveTagInterval,
-                        equipment.getConnectionSettings().getAddress(),
-                        equipment.getConnectionSettings().getPort(),
-                        equipment.getConnectionSettings().getUnitID());
+                createEquipment(equipment);
             }
         }
+    }
+
+    /**
+     * Creates an equipment for a given equipment object from configuration file
+     *
+     * @param equipment from the config file to create on the C2mon server
+     */
+    private void createEquipment(Equipment equipment) {
+        if (log.isDebugEnabled()) {
+            log.debug("Equipment {} not found. Creating a new equipment...", equipment.getName());
+        }
+        int aliveTagInterval = equipment.getAliveTagInterval() == 0 ? 100000 : equipment.getAliveTagInterval();
+        int refreshInterval = equipment.getRefreshInterval() == 0 ? 10000 : equipment.getRefreshInterval();
+        configService.createEquipment(
+                equipment.getName(),
+                HANDLER_CLASS_NAME,
+                refreshInterval,
+                aliveTagInterval,
+                equipment.getConnectionSettings().getAddress(),
+                equipment.getConnectionSettings().getPort(),
+                equipment.getConnectionSettings().getUnitID());
     }
 
     /**
@@ -138,7 +148,8 @@ public class ConfigInitializer implements CommandLineRunner {
         currentEquipmentUnit.setEquipmentAddress(new EquipmentAddress(
                 updatedEquipment.getConnectionSettings().getAddress(),
                 updatedEquipment.getConnectionSettings().getPort(),
-                updatedEquipment.getConnectionSettings().getUnitID()));
+                updatedEquipment.getConnectionSettings().getUnitID(),
+                updatedEquipment.getRefreshInterval()));
         currentEquipmentUnit.setAliveTagInterval(updatedEquipment.getAliveTagInterval() != 0 ?
                 updatedEquipment.getAliveTagInterval() : currentEquipmentUnit.getAliveTagInterval());
         configService.updateEquipment(currentEquipmentUnit);
@@ -157,7 +168,6 @@ public class ConfigInitializer implements CommandLineRunner {
                     updateSignal(signal, commandTag);
                 }
             }
-            //TODO Do it also for command tags
             if (!signalExists) {
                 if (log.isDebugEnabled()) {
                     log.debug("Signal {} not found. Creating a new tag...", signal.getName());
@@ -181,7 +191,7 @@ public class ConfigInitializer implements CommandLineRunner {
         }
         dataTag.setDataType(signal.getType());
         dataTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
-                signal.getModbus().getRegister(), signal.getOffset(), signal.getMultiplier(), signal.getThreshold()));
+                signal.getModbus().getRegister(), signal.getOffset(), signal.getMultiplier(), signal.getThreshold(), signal.getModbus().getBitNumber()));
         configService.updateDataTag(dataTag);
     }
 
@@ -198,7 +208,7 @@ public class ConfigInitializer implements CommandLineRunner {
         if (signal.getModbus().getType().equals("read")) {
             configService.createDataTag(equipmentName, signal.getName(), signal.getType(),
                     signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
-                    signal.getOffset(), signal.getMultiplier(), signal.getThreshold());
+                    signal.getOffset(), signal.getMultiplier(), signal.getThreshold(), signal.getModbus().getBitNumber());
         } else if (signal.getModbus().getType().equals("write")) {
             configService.createCommandTag(equipmentName, signal.getName(), signal.getType(),
                     signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),

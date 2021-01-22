@@ -31,7 +31,8 @@ public class DAQMain {
     private static SpringApplication application;
 
     public static void main(String[] args) throws Exception {
-        //Set environmental variables (only for development)
+        //Set environmental variables (only for development in idea)
+
 
         System.setProperty("c2mon.daq.name", "DAQTEST_PROCESS_CINERGIA_4");
         System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:32302");
@@ -46,6 +47,7 @@ public class DAQMain {
             return;
         }
         */
+
         start(args);
     }
 
