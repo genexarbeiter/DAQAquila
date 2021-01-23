@@ -17,7 +17,6 @@ import java.util.ArrayList;
 @ToString
 public class ConfigurationFile {
 
-    private C2monSettings c2monSettings;
-    private ModelSettings modelSettings;
     private ArrayList<Equipment> equipments;
+
 }

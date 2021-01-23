@@ -63,7 +63,6 @@ public class ProcessConfigurationParser {
         processConfigurationFile.setAliveTagInterval(document.getDocumentElement().getElementsByTagName("max-message-delay").item(0).getTextContent());
 
         //Equipment information
-        //TODO handle multiple equipments
         ArrayList<EquipmentUnit> equipmentUnits = new ArrayList<>();
         NodeList equipmentsUnits = document.getDocumentElement().getElementsByTagName("EquipmentUnit");
 

@@ -1,20 +1,5 @@
-# settings for the modbus device
-
-# settings for the c2mon connection
-c2monSettings: # required
-  clientAddress: 192.168.111.77 # required
-  clientPort: 30203 # optional, 61616 is the default port number
-  #daqAddress: # optional
-  #daqPort: # optional
-
-# setting of the cinergia electric last  model in general
-modelSettings:
-  modelName: DAQTEST_CINERGIA_4 # required, will be in front of the tag name
-  modelVersion: 0.0.1 # optional
-  processName: DAQTEST_PROCESS_CINERGIA_4  # required
-
 equipments:
-  - name: DAQTEST_EQUIPMENT_CINERGIA_EQ1 # required
+  - name: E_CINERGIA_EQ1 # required
     aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon (default: 100.000ms)
     refreshInterval: 10000 # optional, time in milliseconds for refreshing all data tags (default: 10.000ms)
     type: modbus # type of the connection
@@ -136,7 +121,7 @@ equipments:
         bitNumber: 8 #
 
 
-  - name: DAQTEST_EQUIPMENT_CINERGIA_EQ2 # required
+  - name: E_CINERGIA_EQ2 # required
     aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon (default: 100.000ms)
     refreshInterval: 10000 # optional, time in milliseconds for refreshing all data tags (default: 10.000ms)
     type: modbus # type of the connection

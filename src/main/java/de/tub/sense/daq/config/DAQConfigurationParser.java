@@ -35,7 +35,7 @@ public class DAQConfigurationParser {
      */
     private void loadFile() {
         try {
-            if(System.getProperties().containsKey("c2mon.daq.demo-config") && System.getProperty("c2mon.daq.demo-config").equals("true")) {
+            if (System.getProperties().containsKey("c2mon.daq.demo-config") && System.getProperty("c2mon.daq.demo-config").equals("true")) {
                 daqConfigFileStream = new ClassPathResource("demo_config.yaml").getInputStream();
             } else {
                 File daqConfigFile = new File("daq-config.yaml");
@@ -53,8 +53,15 @@ public class DAQConfigurationParser {
      * Parse the configuration file to ConfigurationFile object
      */
     private void parseConfiguration() {
-        Yaml yaml = new Yaml(new Constructor(ConfigurationFile.class));
-        configurationFile = yaml.load(daqConfigFileStream);
+        try {
+            Yaml yaml = new Yaml(new Constructor(ConfigurationFile.class));
+            configurationFile = yaml.load(daqConfigFileStream);
+        } catch (Exception e) {
+            configurationFile = new ConfigurationFile();
+            log.error("Could not parse the yaml config to a valid ConfigurationFile object. " +
+                    "There is something wrong in your config file. Only the configuration already on the c2mon " +
+                    "server will be used. Nothing is updated.", e);
+        }
     }
 
     /**
@@ -68,7 +75,6 @@ public class DAQConfigurationParser {
         }
         return this.configurationFile;
     }
-
 
 
 }

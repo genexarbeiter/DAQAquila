@@ -240,9 +240,12 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
     private void startAutoRefresh() {
         log.debug("Enabling auto refresh...");
         int delay = EquipmentAddress.parseEquipmentAddress(
-                equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new).getRefreshInterval();//Long.parseLong(System.getProperty("c2mon.daq.refreshDelay"));
+                equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new).getRefreshInterval();
+        if(delay == 0) {
+            delay = 10000;
+        }
         ThreadFactory refreshThreadFactory =
-                new ThreadFactoryBuilder().setNameFormat(String.valueOf(equipmentConfiguration.getId())).build();
+                new ThreadFactoryBuilder().setNameFormat(String.valueOf(equipmentConfiguration.getName())).build();
         Executors.newSingleThreadScheduledExecutor(refreshThreadFactory).scheduleAtFixedRate(this::refreshAllDataTags, delay, delay, TimeUnit.MILLISECONDS);
         autoRefreshRunning = true;
     }

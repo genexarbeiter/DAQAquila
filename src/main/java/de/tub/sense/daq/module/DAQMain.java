@@ -39,7 +39,6 @@ public class DAQMain {
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.forceConfiguration", "false");
-        System.setProperty("c2mon.daq.refreshDelay", "10000");
         System.setProperty("c2mon.daq.demo-config","true");
 
         /*
@@ -79,11 +78,9 @@ public class DAQMain {
         } else {
             System.setProperty("c2mon.daq.forceConfiguration", System.getenv("c2mon.daq.forceConfiguration"));
         }
-        if(!System.getenv().containsKey("c2mon.daq.refreshDelay")) {
-            log.info("Missing environment variable 'c2mon.daq.refreshDelay'. Setting it to default value: '1000ms'");
-            System.setProperty("c2mon.daq.refreshDelay", "1000");
-        } else {
-            System.setProperty("c2mon.daq.refreshDelay", System.getenv("c2mon.daq.refreshDelay"));
+        if(System.getenv().containsKey("c2mon.daq.refreshDelay")) {
+            log.warn("Environment variable 'c2mon.daq.refreshDelay' is no longer supported," +
+                    " please specify the refresh interval in the daq config file.");
         }
         if(!System.getenv().containsKey("c2mon.daq.performanceMode")) {
             log.info("Missing environment variable 'c2mon.daq.performanceMode'. Setting it to default value: 'true'");

@@ -71,7 +71,6 @@ public class ModbusTCPService {
     }
 
 
-    //TODO handle more holding types than just 'holding32' holding32 is most common and therefor used for development
     public Optional<Object> getValue(HardwareAddress hardwareAddress, String dataType) {
         if (hardwareAddress.getType().equals("holding32") || hardwareAddress.getType().equals("holding64") || hardwareAddress.getType().equals("holding")) {
             try {
@@ -92,20 +91,6 @@ public class ModbusTCPService {
             log.warn("Modbus type {} not valid.", hardwareAddress.getType());
             return Optional.empty();
         }
-            /*
-            case "input":
-                    try {
-                        ReadInputRegistersResponse response = tcpModbusSocket.readInputRegisters(modbus.getStartAddress(), modbus.getCount());
-                    } catch (Exception e) {
-                        log.warn("Could not read input register with tagName " + tagName, e);
-                    }
-                case "discrete":
-                    try {
-                        ReadInputDiscretesResponse response = tcpModbusSocket.readDiscreteInputs(modbus.getStartAddress(), modbus.getCount());
-                    } catch (Exception e) {
-                        log.warn("Could not read discrete input register with tagName " + tagName, e);
-                    }
-                 */
     }
 
     public void disconnect() {

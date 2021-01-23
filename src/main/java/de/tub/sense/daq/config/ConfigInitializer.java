@@ -27,8 +27,7 @@ public class ConfigInitializer implements CommandLineRunner {
 
     public ConfigInitializer(ConfigService configService) {
         this.configService = configService;
-        FORCE_CONFIGURATION = System.getProperty("c2mon.daq.forceConfiguration") != null
-                && Boolean.parseBoolean(System.getProperty("c2mon.daq.forceConfiguration"));
+        FORCE_CONFIGURATION = Boolean.parseBoolean(System.getProperty("c2mon.daq.forceConfiguration"));
     }
 
     /**
@@ -42,19 +41,19 @@ public class ConfigInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (loadConfigFromServer()) {
-            log.debug("Configuration loaded from C2mon. Checking if force configuration is set to true...");
+            log.info("Configuration loaded from C2mon. Checking if force configuration is set to true...");
             if (FORCE_CONFIGURATION) {
-                log.debug("TRUE! Forcing reconfiguration...");
+                log.info("TRUE! Forcing reconfiguration...");
                 removeC2monConfiguration();
                 configureC2mon();
-                log.debug("Finished reconfiguration");
+                log.info("Finished reconfiguration");
             } else {
-                log.debug("FALSE! Only updating configuration...");
+                log.info("FALSE! Only updating configuration...");
                 updateC2monConfiguration();
-                log.debug("Finished updating configuration.");
+                log.info("Finished updating configuration.");
             }
         } else {
-            log.debug("Configuration is not yet on C2mon server. Configuring...");
+            log.info("Configuration is not yet on C2mon server. Configuring...");
             configureC2mon();
         }
     }
@@ -66,7 +65,7 @@ public class ConfigInitializer implements CommandLineRunner {
      * @return true if the configuration is available, false if not
      */
     private boolean loadConfigFromServer() {
-        log.debug("Loading config from C2mon...");
+        log.info("Loading config from C2mon...");
         log.debug("Checking if process already exists...");
         if (configService.processExists()) {
             if (!configService.isC2monConfigurationLoaded()) {
@@ -83,6 +82,9 @@ public class ConfigInitializer implements CommandLineRunner {
      */
     private void configureC2mon() {
         ConfigurationFile configurationFile = configService.getConfigurationFile();
+        if(configurationFile.getEquipments() == null) {
+            return;
+        }
         configService.createProcess();
         for (Equipment equipment : configurationFile.getEquipments()) {
             createEquipment(equipment);
@@ -98,6 +100,9 @@ public class ConfigInitializer implements CommandLineRunner {
      */
     private void updateC2monConfiguration() {
         ConfigurationFile configurationFile = configService.getConfigurationFile();
+        if(configurationFile.getEquipments() == null) {
+            return;
+        }
         ArrayList<EquipmentUnit> equipmentUnits = configService.getEquipmentUnits();
         for (Equipment equipment : configurationFile.getEquipments()) {
             boolean equipmentExists = false;
@@ -119,8 +124,8 @@ public class ConfigInitializer implements CommandLineRunner {
      * @param equipment from the config file to create on the C2mon server
      */
     private void createEquipment(Equipment equipment) {
-        if (log.isDebugEnabled()) {
-            log.debug("Equipment {} not found. Creating a new equipment...", equipment.getName());
+        if (log.isInfoEnabled()) {
+            log.info("Equipment {} not found. Creating a new equipment...", equipment.getName());
         }
         int aliveTagInterval = equipment.getAliveTagInterval() == 0 ? 100000 : equipment.getAliveTagInterval();
         int refreshInterval = equipment.getRefreshInterval() == 0 ? 10000 : equipment.getRefreshInterval();
@@ -142,8 +147,8 @@ public class ConfigInitializer implements CommandLineRunner {
      * @param currentEquipmentUnit from the C2mon server
      */
     private void updateEquipment(Equipment updatedEquipment, EquipmentUnit currentEquipmentUnit) {
-        if (log.isDebugEnabled()) {
-            log.debug("Updating equipment {} with id {}...", updatedEquipment.getName(), currentEquipmentUnit.getId());
+        if (log.isInfoEnabled()) {
+            log.info("Updating equipment {} with id {}...", updatedEquipment.getName(), currentEquipmentUnit.getId());
         }
         currentEquipmentUnit.setEquipmentAddress(new EquipmentAddress(
                 updatedEquipment.getConnectionSettings().getAddress(),
@@ -153,7 +158,6 @@ public class ConfigInitializer implements CommandLineRunner {
         currentEquipmentUnit.setAliveTagInterval(updatedEquipment.getAliveTagInterval() != 0 ?
                 updatedEquipment.getAliveTagInterval() : currentEquipmentUnit.getAliveTagInterval());
         configService.updateEquipment(currentEquipmentUnit);
-
         for (Signal signal : updatedEquipment.getSignals()) {
             boolean signalExists = false;
             for (DataTag dataTag : currentEquipmentUnit.getDataTags()) {
@@ -169,13 +173,12 @@ public class ConfigInitializer implements CommandLineRunner {
                 }
             }
             if (!signalExists) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Signal {} not found. Creating a new tag...", signal.getName());
+                if (log.isInfoEnabled()) {
+                    log.info("Signal {} not found. Creating a new tag...", signal.getName());
                 }
                 createTagFromSignal(signal, currentEquipmentUnit.getName());
             }
         }
-
     }
 
     /**
@@ -186,8 +189,8 @@ public class ConfigInitializer implements CommandLineRunner {
      * @param dataTag from the C2mon server
      */
     private void updateSignal(Signal signal, DataTag dataTag) {
-        if (log.isDebugEnabled()) {
-            log.debug("Updating data tag {} with id {}...", signal.getName(), dataTag.getId());
+        if (log.isInfoEnabled()) {
+            log.info("Updating data tag {} with id {}...", signal.getName(), dataTag.getId());
         }
         dataTag.setDataType(signal.getType());
         dataTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
@@ -202,8 +205,8 @@ public class ConfigInitializer implements CommandLineRunner {
      * @param equipmentName of the signal
      */
     private void createTagFromSignal(Signal signal, String equipmentName) {
-        if (log.isDebugEnabled()) {
-            log.debug("Creating signal for tag {}...", signal.getName());
+        if (log.isInfoEnabled()) {
+            log.info("Creating signal for tag {}...", signal.getName());
         }
         if (signal.getModbus().getType().equals("read")) {
             configService.createDataTag(equipmentName, signal.getName(), signal.getType(),
@@ -226,8 +229,8 @@ public class ConfigInitializer implements CommandLineRunner {
      * @param commandTag from the C2mon server
      */
     private void updateSignal(Signal signal, CommandTag commandTag) {
-        if (log.isDebugEnabled()) {
-            log.debug("Updating command tag {} with id {}...", signal.getName(), commandTag.getId());
+        if (log.isInfoEnabled()) {
+            log.info("Updating command tag {} with id {}...", signal.getName(), commandTag.getId());
         }
         commandTag.setDataType(signal.getType());
         commandTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),

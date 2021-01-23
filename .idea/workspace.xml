@@ -19,18 +19,18 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="945594be-b6a4-46d8-96ef-03189990fe79" name="Default Changelist" comment="- CommandTag implementation&#10;- BitNumber implementation">
+    <list default="true" id="945594be-b6a4-46d8-96ef-03189990fe79" name="Default Changelist" comment="- Loading multiple equipments from config file&#10;- code clean up&#10;- bug fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigInitializer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/DAQConfigurationParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/DAQConfigurationParser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ProcessConfigurationParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ProcessConfigurationParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/Equipment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/Equipment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/Signal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/Signal.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/xml/EquipmentAddress.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/xml/EquipmentAddress.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/xml/HardwareAddress.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/xml/HardwareAddress.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/C2monSettings.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/ConfigurationFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/ConfigurationFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/file/ModelSettings.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/modbus/ModbusTCPService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/modbus/ModbusTCPService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMain.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMessageHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMessageHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/demo_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/demo_config.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -190,7 +190,7 @@
       <workItem from="1610697725602" duration="27767000" />
       <workItem from="1610735508504" duration="6000" />
       <workItem from="1611337738968" duration="564000" />
-      <workItem from="1611339743822" duration="5987000" />
+      <workItem from="1611339743822" duration="12569000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Commit">
       <created>1607332847816</created>
@@ -395,7 +395,14 @@
       <option name="project" value="LOCAL" />
       <updated>1610713723396</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="- Loading multiple equipments from config file&#10;- code clean up&#10;- bug fix">
+      <created>1611347327425</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1611347327425</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -414,7 +421,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Edit DockerFile" />
     <MESSAGE value="changed pom" />
     <MESSAGE value="changed .gitignore" />
     <MESSAGE value="maven clean" />
@@ -439,7 +445,8 @@
     <MESSAGE value="- Added optionality to load demo config&#10;- Preparations for including command tags&#10;- Added data type attribute to command tag" />
     <MESSAGE value="- CommandTag implementation" />
     <MESSAGE value="- CommandTag implementation&#10;- BitNumber implementation" />
-    <option name="LAST_COMMIT_MESSAGE" value="- CommandTag implementation&#10;- BitNumber implementation" />
+    <MESSAGE value="- Loading multiple equipments from config file&#10;- code clean up&#10;- bug fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Loading multiple equipments from config file&#10;- code clean up&#10;- bug fix" />
   </component>
   <component name="WindowStateProjectService">
     <state x="2465" y="96" key="#DAQConfigurerMain" timestamp="1607348140932">
@@ -477,10 +484,10 @@
     <state x="120" y="0" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1608635238046" />
     <state x="1817" y="-711" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/1680.-711.1920.1057/0.23.1680.997@1680.-711.1920.1057" timestamp="1607689892560" />
     <state x="1817" y="-734" key="#com.intellij.refactoring.rename.AutomaticRenamingDialog/1680.-734.1920.1080/0.0.1680.1050@1680.-734.1920.1080" timestamp="1610270973506" />
-    <state x="506" y="248" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1607941322750">
+    <state x="506" y="248" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1611401299326">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="506" y="248" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1607941322750" />
+    <state x="506" y="248" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1611401299326" />
     <state x="2258" y="-461" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/1680.-711.1920.1057/0.23.1680.997@1680.-711.1920.1057" timestamp="1607693159524" />
     <state x="2334" y="258" width="589" height="525" key="EnvironmentVariablesDialog" timestamp="1607356018562">
       <screen x="1680" y="23" width="1680" height="986" />
@@ -643,12 +650,13 @@
     </state>
     <state x="359" y="134" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1609414867302" />
     <state x="2039" y="154" key="SettingsEditor/1680.23.1680.1027/0.23.1680.985@1680.23.1680.1027" timestamp="1607339053210" />
-    <state x="2183" y="-472" key="Vcs.Push.Dialog.v2" timestamp="1610713724999">
-      <screen x="1680" y="-711" width="1920" height="1057" />
+    <state x="440" y="237" key="Vcs.Push.Dialog.v2" timestamp="1611347330604">
+      <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="440" y="237" key="Vcs.Push.Dialog.v2/0.0.1680.1050@0.0.1680.1050" timestamp="1609420328062" />
     <state x="2183" y="-482" key="Vcs.Push.Dialog.v2/1680.-711.1920.1015/0.23.1680.1027@1680.-711.1920.1015" timestamp="1610376230580" />
     <state x="2183" y="-472" key="Vcs.Push.Dialog.v2/1680.-711.1920.1057/0.23.1680.1027@1680.-711.1920.1057" timestamp="1610713724999" />
+    <state x="440" y="237" key="Vcs.Push.Dialog.v2/1680.-734.1920.1080/0.0.1680.1050@0.0.1680.1050" timestamp="1611347330604" />
     <state x="2183" y="-490" key="Vcs.Push.Dialog.v2/1680.-734.1920.1080/0.0.1680.1050@1680.-734.1920.1080" timestamp="1610635730458" />
     <state x="2183" y="-490" key="Vcs.Push.Dialog.v2/1680.-734.1920.1080/0.23.1680.1027@1680.-734.1920.1080" timestamp="1610215231959" />
     <state x="2120" y="255" key="Vcs.Push.Dialog.v2/1680.23.1680.1027/0.23.1680.1027@1680.23.1680.1027" timestamp="1607352710590" />
