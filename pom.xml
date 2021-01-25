@@ -10,8 +10,8 @@
     </parent>
 
     <groupId>de.tub.sense.daq.config</groupId>
-    <artifactId>DaqConfigLoader</artifactId>
-    <version>0.0.1</version>
+    <artifactId>DAQAquila</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <properties>

@@ -22,6 +22,6 @@ COPY src /workspace/src
 RUN mvn package
 
 FROM openjdk:14-slim
-COPY --from=build /workspace/target/*DaqConfigLoader-0.0.1.jar app.jar
+COPY --from=build /workspace/target/*DAQAquila-1.0.0.jar app.jar
 COPY --from=build /workspace/target/lib lib
 ENTRYPOINT ["java","-jar","app.jar"]

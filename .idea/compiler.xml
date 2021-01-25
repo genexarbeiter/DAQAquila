@@ -7,11 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="DAQConfigLoader" />
+        <module name="DAQAquila" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="DAQConfigLoader" target="8" />
+      <module name="DAQAquila" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -10,6 +10,7 @@ import cern.c2mon.shared.client.configuration.api.tag.StatusTag;
 import cern.c2mon.shared.common.datatag.DataTagAddress;
 import cern.c2mon.shared.common.datatag.address.impl.SimpleHardwareAddressImpl;
 import de.tub.sense.daq.config.file.ConfigurationFile;
+import de.tub.sense.daq.config.file.GeneralSettings;
 import de.tub.sense.daq.config.xml.CommandTag;
 import de.tub.sense.daq.config.xml.DataTag;
 import de.tub.sense.daq.config.xml.EquipmentAddress;
@@ -47,6 +48,8 @@ public class ConfigService {
             reloadC2monConfiguration();
         }
     }
+
+
 
     /**
      * Returns the local configuration for the DAQ
@@ -89,7 +92,7 @@ public class ConfigService {
      * @param dataTag you want to update
      */
     protected void updateDataTag(DataTag dataTag) {
-        if (dataTag.getAddress().getBitNumber() < 0 || dataTag.getAddress().getBitNumber() >= 15) {
+        if (dataTag.getAddress().getBitNumber() < 0 || dataTag.getAddress().getBitNumber() > 15) {
             throw new IllegalArgumentException("Bitnumber for tag " + dataTag.getName() + " is " + dataTag.getAddress().getBitNumber() + " but it has to be in the interval [0, 15]");
         }
         cern.c2mon.shared.client.configuration.api.tag.DataTag updatedTag = cern.c2mon.shared.client.configuration.api.tag.DataTag.update(dataTag.getId())
@@ -276,7 +279,7 @@ public class ConfigService {
      */
     protected void createDataTag(String equipmentName, String tagName, String datatype, int startAddress,
                                  String registerType, int valueCount, double offset, double multiplier, double threshold, int bitNumber) {
-        if (bitNumber < 0 || bitNumber >= 15) {
+        if (bitNumber < 0 || bitNumber > 15) {
             throw new IllegalArgumentException("Bitnumber for tag " + tagName + " is " + bitNumber + " but it has to be in the interval [0, 15]");
         }
         configurationService.createDataTag(equipmentName, equipmentName + "/" + tagName, dataTypeClass(datatype),

@@ -32,63 +32,30 @@ public class DAQMain {
 
     public static void main(String[] args) throws Exception {
         //Set environmental variables (only for development in idea)
-
-
-        System.setProperty("c2mon.daq.name", "DAQTEST_PROCESS_CINERGIA_4");
+        /*System.setProperty("c2mon.daq.name", "DAQTEST_PROCESS_CINERGIA_4");
         System.setProperty("c2mon.client.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.forceConfiguration", "false");
         System.setProperty("c2mon.daq.demo-config","true");
 
-        /*
         if (!loadEnvironment()) {
             return;
         }
         */
-
+        checkDemoConfig();
         start(args);
     }
 
     /**
      * Validate that the environment variables are present, if not prevent default and log a warning.
      */
-    private static boolean loadEnvironment() {
-        if (!System.getenv().containsKey("c2mon.daq.name")) {
-            log.error("Missing environment variable 'c2mon.daq.name'");
-            return false;
+    private static void checkDemoConfig() {
+        if(!System.getenv().containsKey("c2mon.daq.demoConfig")) {
+            System.setProperty("c2mon.daq.demo-config", "false");
         } else {
-            System.setProperty("c2mon.daq.name", System.getenv("c2mon.daq.name"));
+            System.setProperty("c2mon.daq.demo-config", System.getenv("c2mon.daq.demoConfig"));
         }
-        if (!System.getenv().containsKey("c2mon.client.jms.url")) {
-            log.error("Missing environment variable 'c2mon.client.jms.url'");
-            return false;
-        } else {
-            System.setProperty("c2mon.client.jms.url", System.getenv("c2mon.client.jms.url"));
-        }
-        if (!System.getenv().containsKey("c2mon.daq.jms.url")) {
-            log.error("Missing environment variable 'c2mon.daq.jms.url'");
-            return false;
-        } else {
-            System.setProperty("c2mon.daq.jms.url", System.getenv("c2mon.daq.jms.url"));
-        }
-        if (!System.getenv().containsKey("c2mon.daq.forceConfiguration")) {
-            log.info("Missing environment variable 'forceConfiguration'. Setting it to default value: 'false'");
-            System.setProperty("c2mon.daq.forceConfiguration", "false");
-        } else {
-            System.setProperty("c2mon.daq.forceConfiguration", System.getenv("c2mon.daq.forceConfiguration"));
-        }
-        if(System.getenv().containsKey("c2mon.daq.refreshDelay")) {
-            log.warn("Environment variable 'c2mon.daq.refreshDelay' is no longer supported," +
-                    " please specify the refresh interval in the daq config file.");
-        }
-        if(!System.getenv().containsKey("c2mon.daq.performanceMode")) {
-            log.info("Missing environment variable 'c2mon.daq.performanceMode'. Setting it to default value: 'true'");
-            System.setProperty("c2mon.daq.performanceMode", "true");
-        } else {
-            System.setProperty("c2mon.daq.performanceMode", System.getenv("c2mon.daq.performanceMode"));
-        }
-        return true;
     }
 
     /**

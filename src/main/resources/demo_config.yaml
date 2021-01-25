@@ -1,3 +1,10 @@
+general: # required
+  c2monHost: 192.168.111.77 # required
+  c2monPort: 32302 # optional, 61616 is the default port number
+  processName: DAQTEST_PROCESS_CINERGIA_4 # name of the process
+  forceConfiguration: false # if true all c2mon configuration for the process will be overwritten on daq startup
+  performanceMode: false # if true offset, multiplier and threshold checking is disabled for performance reasons
+
 equipments:
   - name: E_CINERGIA_EQ1 # required
     aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon (default: 100.000ms)
@@ -9,116 +16,116 @@ equipments:
       unitID: 1 # optional but required? for load simulator device
     # define all signals (data and commands) provided by the modbus interface
     signals:
-    - name: Alarm_Vector_ABR # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: read # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 13000 # required
-        count: 2 # optional for reading only one value, otherwise required
-    - name: CW_EnableDisable # required
-      min: 0 # required
-      max: 4294967296 # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: write # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17004 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: Alarm_Vector_ABR # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 13000 # required
+          count: 2 # optional for reading only one value, otherwise required
+      - name: CW_EnableDisable # required
+        min: 0 # required
+        max: 4294967296 # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17004 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: CW_RunReady # required
-      min: 0 # required
-      max: 4294967296 # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: write # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17006 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: CW_RunReady # required
+        min: 0 # required
+        max: 4294967296 # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17006 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: CW_RunReady_R # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: read # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17006 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: CW_RunReady_R # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17006 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: CW_ControlOperation # required
-      min: 0 # required
-      max: 4294967296 # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: write # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17014 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: CW_ControlOperation # required
+        min: 0 # required
+        max: 4294967296 # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17014 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: CW_ControlOperation_R # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: read # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17014 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: CW_ControlOperation_R # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17014 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: CW_FunctionOperation # required
-      min: 0 # required
-      max: 4294967296 # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: write # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17016 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: CW_FunctionOperation # required
+        min: 0 # required
+        max: 4294967296 # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17016 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: CW_FunctionOperation_R # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: read # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 17016 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: CW_FunctionOperation_R # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 17016 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: Limit_max_Voltage_AC_Output_W # required
-      min: 0 # required
-      max: 300 # required
-      type: float32 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: write # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 23008 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: Limit_max_Voltage_AC_Output_W # required
+        min: 0 # required
+        max: 300 # required
+        type: float32 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 23008 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: Limit_max_Voltage_AC_Output_R # required
-      type: float32 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: read # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 23008 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: Limit_max_Voltage_AC_Output_R # required
+        type: float32 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 23008 # required
+          count: 2 # optional for reading only one value, otherwise required
 
-    - name: KKM_Freigabe_Automatik # required
-      min: 0 # required
-      max: 1 # required
-      type: bool # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: write # required type can be one of the following words: [read,write]
-        register: holding # required; read => [holding] write => [holding]
-        startAddress: 13290 # required
-        count: 1 # optional for reading only one value, otherwise required
-        bitNumber: 8 #
+      - name: KKM_Freigabe_Automatik # required
+        min: 0 # required
+        max: 1 # required
+        type: bool # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 13290 # required
+          count: 1 # optional for reading only one value, otherwise required
+          bitNumber: 8 #
 
 
   - name: E_CINERGIA_EQ2 # required
@@ -131,11 +138,11 @@ equipments:
       unitID: 1 # optional but required? for load simulator device
     # define all signals (data and commands) provided by the modbus interface
     signals:
-    - name: Alarm_Vector_ABD # required
-      type: s64 # required, data type defined by SourceDataType enum
-      description: # optional
-      modbus: # required
-        type: read # required type can be one of the following words: [read,write]
-        register: holding32 # required; read => [holding] write => [holding]
-        startAddress: 13000 # required
-        count: 2 # optional for reading only one value, otherwise required
+      - name: Alarm_Vector_ABD # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding32 # required; read => [holding] write => [holding]
+          startAddress: 13000 # required
+          count: 2 # optional for reading only one value, otherwise required

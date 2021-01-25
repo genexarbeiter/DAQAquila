@@ -17,6 +17,7 @@ import java.util.ArrayList;
 @ToString
 public class ConfigurationFile {
 
+    private GeneralSettings general;
     private ArrayList<Equipment> equipments;
 
 }
