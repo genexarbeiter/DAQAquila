@@ -193,9 +193,42 @@ public class ConfigInitializer implements CommandLineRunner {
             log.info("Updating data tag {} with id {}...", signal.getName(), dataTag.getId());
         }
         dataTag.setDataType(signal.getType());
-        dataTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
+
+        dataTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), getCount(signal.getType()),
                 signal.getModbus().getRegister(), signal.getOffset(), signal.getMultiplier(), signal.getThreshold(), signal.getModbus().getBitNumber()));
         configService.updateDataTag(dataTag);
+    }
+
+    /**
+     * Get value count from signal type
+     * @param signalType of the signal
+     * @return count of registers in modbus
+     */
+    private int getCount(String signalType) {
+        int count = 1;
+        switch (signalType) {
+            case "bool":
+            case "u8":
+            case "s8":
+            case "u16":
+            case "s16":
+                count = 1;
+                break;
+            case "u32":
+            case "s32":
+            case "float32":
+                count = 2;
+                break;
+            case "u64":
+            case "s64":
+            case "float64":
+                count = 4;
+                break;
+            default:
+                log.warn("Unrecognized signal type {}", signalType);
+                break;
+        }
+        return count;
     }
 
     /**
@@ -210,11 +243,11 @@ public class ConfigInitializer implements CommandLineRunner {
         }
         if (signal.getModbus().getType().equals("read")) {
             configService.createDataTag(equipmentName, signal.getName(), signal.getType(),
-                    signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
+                    signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), getCount(signal.getType()),
                     signal.getOffset(), signal.getMultiplier(), signal.getThreshold(), signal.getModbus().getBitNumber());
         } else if (signal.getModbus().getType().equals("write")) {
             configService.createCommandTag(equipmentName, signal.getName(), signal.getType(),
-                    signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), signal.getModbus().getCount(),
+                    signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), getCount(signal.getType()),
                     signal.getMin(), signal.getMax(), signal.getModbus().getBitNumber());
         } else {
             log.error("Unrecognized modbus type {} for signal {}", signal.getModbus().getType(), signal.getName());
@@ -233,7 +266,7 @@ public class ConfigInitializer implements CommandLineRunner {
             log.info("Updating command tag {} with id {}...", signal.getName(), commandTag.getId());
         }
         commandTag.setDataType(signal.getType());
-        commandTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), signal.getModbus().getCount(),
+        commandTag.setAddress(new HardwareAddress(signal.getModbus().getStartAddress(), getCount(signal.getType()),
                 signal.getModbus().getRegister(), signal.getMin(), signal.getMax(), signal.getModbus().getBitNumber()));
         configService.updateCommandTag(commandTag);
     }

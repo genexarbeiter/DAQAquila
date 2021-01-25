@@ -17,8 +17,8 @@ public class Modbus {
 
     private String type;
     private String register;
-    private int startAddress;
     private int count;
+    private int startAddress;
     private int bitNumber;
 
 }

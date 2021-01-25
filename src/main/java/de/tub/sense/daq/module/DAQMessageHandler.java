@@ -241,7 +241,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
         log.debug("Enabling auto refresh...");
         int delay = EquipmentAddress.parseEquipmentAddress(
                 equipmentConfiguration.getAddress()).orElseThrow(RuntimeException::new).getRefreshInterval();
-        if(delay == 0) {
+        if (delay == 0) {
             delay = 10000;
         }
         ThreadFactory refreshThreadFactory =
@@ -276,6 +276,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
                     sourceCommandTagValue.getName(), sourceCommandTagValue.getEquipmentId(),
                     sourceCommandTagValue.getDataType(), sourceCommandTagValue.getValue());
         }
+        log.debug("Hardware address {}", equipmentConfiguration.getSourceCommandTag(sourceCommandTagValue.getId()).getHardwareAddress().toConfigXML());
         Optional<HardwareAddress> optionalHardwareAddress = HardwareAddress.parseHardwareAddressFromXML(
                 equipmentConfiguration.getSourceCommandTag(sourceCommandTagValue.getId()).getHardwareAddress().toConfigXML());
         if (optionalHardwareAddress.isPresent()) {

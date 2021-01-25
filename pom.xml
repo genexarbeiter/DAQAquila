@@ -9,6 +9,7 @@
         <version>1.10.0</version>
     </parent>
 
+
     <groupId>de.tub.sense.daq.config</groupId>
     <artifactId>DAQAquila</artifactId>
     <version>1.0.0</version>

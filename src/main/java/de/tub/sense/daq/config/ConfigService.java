@@ -10,7 +10,6 @@ import cern.c2mon.shared.client.configuration.api.tag.StatusTag;
 import cern.c2mon.shared.common.datatag.DataTagAddress;
 import cern.c2mon.shared.common.datatag.address.impl.SimpleHardwareAddressImpl;
 import de.tub.sense.daq.config.file.ConfigurationFile;
-import de.tub.sense.daq.config.file.GeneralSettings;
 import de.tub.sense.daq.config.xml.CommandTag;
 import de.tub.sense.daq.config.xml.DataTag;
 import de.tub.sense.daq.config.xml.EquipmentAddress;
@@ -48,7 +47,6 @@ public class ConfigService {
             reloadC2monConfiguration();
         }
     }
-
 
 
     /**
@@ -168,34 +166,26 @@ public class ConfigService {
      * Remove the process and its equipments from C2mon
      */
     protected void removeProcessFromC2monEntirely() {
-        if (log.isDebugEnabled()) {
-            log.debug("Removing process {} entirely", PROCESS_NAME);
-        }
+        log.info("Removing process {} entirely...", PROCESS_NAME);
         if (processExists()) {
             reloadC2monConfiguration();
             for (EquipmentUnit equipmentUnit : getEquipmentUnits()) {
-                log.debug("Removing data tags");
+                log.info("Removing data tags...");
                 for (DataTag dataTag : equipmentUnit.getDataTags()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Removing data tag {}...", dataTag.getName());
-                    }
+                    log.info("Removing data tag {}...", dataTag.getName());
                     configurationService.removeDataTagById(dataTag.getId());
                 }
-                log.debug("Removing command tags");
+                log.debug("Removing command tags...");
                 for (CommandTag commandTag : equipmentUnit.getCommandTags()) {
                     configurationService.removeCommandTagById(commandTag.getId());
-                    if (log.isDebugEnabled()) {
-                        log.debug("Removing command tag {}...", commandTag.getName());
-                    }
+                    log.info("Removing command tag {}...", commandTag.getName());
                 }
-                log.debug("Removing equipment");
+                log.info("Removing equipment {}...", equipmentUnit.getName());
                 configurationService.removeCommandTagById(equipmentUnit.getCommfaultTagId());
                 configurationService.removeEquipmentById(equipmentUnit.getId());
             }
             removeProcess();
-            if (log.isDebugEnabled()) {
-                log.debug("Removed process {} entirely", PROCESS_NAME);
-            }
+            log.info("Removed process {} entirely", PROCESS_NAME);
         } else {
             throw new IllegalArgumentException("No process with name " + PROCESS_NAME + " found.");
         }

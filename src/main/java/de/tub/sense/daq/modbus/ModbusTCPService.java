@@ -163,7 +163,7 @@ public class ModbusTCPService {
 
     public Optional<Object[]> preDataProcessing(final Object writeValue, HardwareAddress hardwareAddress, String dataType) {
         if (hardwareAddress.getType().equals("holding32") ||
-                hardwareAddress.getType().equals("holding64")) {
+                hardwareAddress.getType().equals("holding64") || hardwareAddress.getType().equals("holding")) {
             final Integer[] result = new Integer[hardwareAddress.getValueCount()];
             ByteBuffer bb = ByteBuffer.allocate(2 * hardwareAddress.getValueCount());
             byte[] bytes = null;
@@ -194,64 +194,75 @@ public class ModbusTCPService {
                         bytes = bb.putFloat(num.floatValue()).array();
                     }
                     break;
+                case 1:
+                    if (dataType.equals(Short.class.getCanonicalName())) {
+                        Number num = (Number) writeValue;
+                        bytes = bb.putShort(num.shortValue()).array();
+                        break;
+                    }
+                    if (dataType.equals(Boolean.class.getCanonicalName())) {
+                        try {
+                            short registerValue = (short) getValue(hardwareAddress, "java.lang.Short").orElseThrow(RuntimeException::new);
+                            if (log.isTraceEnabled()) {
+                                log.trace("Register value before: {}", registerValue);
+                            }
+                            byte[] shortInBytes = new byte[2];
+                            shortInBytes[0] = (byte) (registerValue & 0xff);
+                            shortInBytes[1] = (byte) ((registerValue >> 8) & 0xff);
+                            if (log.isTraceEnabled()) {
+                                log.trace("Before Bit number {} : {}", hardwareAddress.getBitNumber(), Integer.toBinaryString(registerValue));
+                            }
+                            if (hardwareAddress.getBitNumber() <= 7) {
+                                if ((boolean) writeValue) {
+                                    shortInBytes[0] |= 1L << hardwareAddress.getBitNumber(); //TRUE
+                                } else {
+                                    shortInBytes[0] &= ~(1 << hardwareAddress.getBitNumber());
+
+                                }
+                            } else {
+                                if ((boolean) writeValue) {
+                                    shortInBytes[1] |= 1L << hardwareAddress.getBitNumber() - 8;
+                                } else {
+                                    shortInBytes[1] &= ~(1 << hardwareAddress.getBitNumber() - 8);
+                                }
+                            }
+                            if (log.isTraceEnabled()) {
+                                log.trace("After Bit number {}: {}", hardwareAddress.getBitNumber(), Integer.toBinaryString(ByteBuffer.wrap(shortInBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get()));
+                            }
+                            Object[] result2 = new Object[1];
+                            result2[0] = (int) ByteBuffer.wrap(shortInBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get();
+                            if (log.isTraceEnabled()) {
+                                log.trace("Holding result {}", result2[0]);
+                            }
+                            return Optional.of(result2);
+                        } catch (Exception e) {
+                            log.error("Error while retrieving value for modbus holding register address " + hardwareAddress.getStartAddress(), e);
+                            return Optional.empty();
+                        }
+                    }
+                    break;
             }
             if (bytes != null) {
                 for (int i = 0; i < hardwareAddress.getValueCount(); i++) {
                     short aShort = ByteBuffer.wrap(Arrays.copyOfRange(bytes, 2 * i, 2 * i + 2)).getShort();
                     result[i] = (aShort < 0) ? (aShort + 65536) : aShort;
                 }
-                log.debug(Arrays.toString(result));
+                if (log.isTraceEnabled()) {
+                    log.trace(Arrays.toString(result));
+                }
                 return Optional.of(result);
             }
             throw new RuntimeException("preDataProcessing: Cannot process data of type " + dataType +
                     " for write value count " + hardwareAddress.getValueCount() +
-                    " from holding32/64 register");
-        }
-        if (hardwareAddress.getType().equals("holding") && dataType.equals(Boolean.class.getCanonicalName())) {
-            try {
-                short registerValue = (short) getValue(hardwareAddress, "java.lang.Short").orElseThrow(RuntimeException::new);
-                if(log.isTraceEnabled()) {
-                    log.trace("Register value before: {}", registerValue);
-                }
-                byte[] shortInBytes = new byte[2];
-                shortInBytes[0] = (byte) (registerValue & 0xff);
-                shortInBytes[1] = (byte) ((registerValue >> 8) & 0xff);
-                if(log.isTraceEnabled()) {
-                    log.trace("Before Bit number {} : {}", hardwareAddress.getBitNumber(), Integer.toBinaryString(registerValue));
-                }
-                if (hardwareAddress.getBitNumber() <= 7) {
-                    if ((boolean) writeValue) {
-                        shortInBytes[0] |= 1L << hardwareAddress.getBitNumber(); //TRUE
-                    } else {
-                        shortInBytes[0] &= ~(1 << hardwareAddress.getBitNumber());
-
-                    }
-                } else {
-                    if ((boolean) writeValue) {
-                        shortInBytes[1] |= 1L << hardwareAddress.getBitNumber() - 8;
-                    } else {
-                        shortInBytes[1] &= ~(1 << hardwareAddress.getBitNumber() - 8);
-                    }
-                }
-                if(log.isTraceEnabled()) {
-                    log.trace("After Bit number {}: {}", hardwareAddress.getBitNumber(), Integer.toBinaryString(ByteBuffer.wrap(shortInBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get()));
-                }
-                Object[] result = new Object[1];
-                result[0] = (int) ByteBuffer.wrap(shortInBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get();
-                if(log.isTraceEnabled()) {
-                    log.trace("Holding result {}", result[0]);
-                }
-                return Optional.of(result);
-            } catch (Exception e) {
-                log.error("Error while retrieving value for modbus holding register address " + hardwareAddress.getStartAddress(), e);
-                return Optional.empty();
-            }
+                    " from holding/holding32/holding64 register");
         }
         return Optional.empty();
     }
 
     private boolean readBooleanFromShort(short encoded, int index) {
-        log.debug("Reading index {} from {}", index, Integer.toBinaryString((int) encoded));
+        if (log.isTraceEnabled()) {
+            log.trace("Reading index {} from {}", index, Integer.toBinaryString((int) encoded));
+        }
         return (encoded & (1L << index)) != 0;
     }
 }
