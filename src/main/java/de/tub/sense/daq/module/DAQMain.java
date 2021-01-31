@@ -37,14 +37,17 @@ public class DAQMain {
         System.setProperty("c2mon.daq.jms.url", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.jms.secondaryUrl", "failover:tcp://192.168.111.77:32302");
         System.setProperty("c2mon.daq.forceConfiguration", "false");
-        System.setProperty("c2mon.daq.demo-config","true");
+
 
         if (!loadEnvironment()) {
             return;
         }
         */
+
         checkDemoConfig();
         start(args);
+        //TODO Implement input(non write) and coil(bool) register
+        //TODO Test all data types with all register types
     }
 
     /**
@@ -56,6 +59,8 @@ public class DAQMain {
         } else {
             System.setProperty("c2mon.daq.demo-config", System.getenv("c2mon.daq.demoConfig"));
         }
+        //TODO Undo
+        System.setProperty("c2mon.daq.demo-config","true");
     }
 
     /**

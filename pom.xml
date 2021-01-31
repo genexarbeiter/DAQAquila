@@ -34,8 +34,29 @@
             <name>Maven Central Repository</name>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
+        <repository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>ias-snapshots</id>
+            <name>Infinite Automation Snapshot Repository</name>
+            <url>https://maven.mangoautomation.net/repository/ias-snapshot/</url>
+        </repository>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>ias-releases</id>
+            <name>Infinite Automation Release Repository</name>
+            <url>https://maven.mangoautomation.net/repository/ias-release/</url>
+        </repository>
     </repositories>
-
     <dependencies>
         <dependency>
             <groupId>cern.c2mon.daq</groupId>
@@ -71,6 +92,11 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>2.11.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.infiniteautomation</groupId>
+            <artifactId>bacnet4j</artifactId>
+            <version>5.0.2</version>
         </dependency>
     </dependencies>
 
@@ -120,6 +146,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>

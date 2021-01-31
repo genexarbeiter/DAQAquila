@@ -21,9 +21,8 @@ equipments:
         description: # optional
         modbus: # required
           type: read # required type can be one of the following words: [read,write]
-          register: holding32 # required; read => [holding] write => [holding]
+          register: holding # required; read => [holding] write => [holding]
           startAddress: 13000 # required
-          count: 2 # optional for reading only one value, otherwise required
       - name: CW_EnableDisable # required
         min: 0 # required
         max: 4294967296 # required
@@ -33,7 +32,6 @@ equipments:
           type: write # required type can be one of the following words: [read,write]
           register: holding32 # required; read => [holding] write => [holding]
           startAddress: 17004 # required
-          count: 2 # optional for reading only one value, otherwise required
 
       - name: CW_RunReady # required
         min: 0 # required
@@ -42,18 +40,16 @@ equipments:
         description: # optional
         modbus: # required
           type: write # required type can be one of the following words: [read,write]
-          register: holding32 # required; read => [holding] write => [holding]
+          register: holding # required; read => [holding] write => [holding]
           startAddress: 17006 # required
-          count: 2 # optional for reading only one value, otherwise required
 
       - name: CW_RunReady_R # required
         type: s64 # required, data type defined by SourceDataType enum
         description: # optional
         modbus: # required
           type: read # required type can be one of the following words: [read,write]
-          register: holding32 # required; read => [holding] write => [holding]
+          register: holding # required; read => [holding] write => [holding]
           startAddress: 17006 # required
-          count: 2 # optional for reading only one value, otherwise required
 
       - name: CW_ControlOperation # required
         min: 0 # required
@@ -62,18 +58,16 @@ equipments:
         description: # optional
         modbus: # required
           type: write # required type can be one of the following words: [read,write]
-          register: holding32 # required; read => [holding] write => [holding]
+          register: holding # required; read => [holding] write => [holding]
           startAddress: 17014 # required
-          count: 2 # optional for reading only one value, otherwise required
 
       - name: CW_ControlOperation_R # required
         type: s64 # required, data type defined by SourceDataType enum
         description: # optional
         modbus: # required
           type: read # required type can be one of the following words: [read,write]
-          register: holding32 # required; read => [holding] write => [holding]
+          register: holding # required; read => [holding] write => [holding]
           startAddress: 17014 # required
-          count: 2 # optional for reading only one value, otherwise required
 
       - name: CW_FunctionOperation # required
         min: 0 # required
@@ -84,7 +78,6 @@ equipments:
           type: write # required type can be one of the following words: [read,write]
           register: holding32 # required; read => [holding] write => [holding]
           startAddress: 17016 # required
-          count: 2 # optional for reading only one value, otherwise required
 
       - name: CW_FunctionOperation_R # required
         type: s64 # required, data type defined by SourceDataType enum
@@ -127,7 +120,6 @@ equipments:
           count: 1 # optional for reading only one value, otherwise required
           bitNumber: 8 #
 
-
   - name: E_CINERGIA_EQ2 # required
     aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon (default: 100.000ms)
     refreshInterval: 10000 # optional, time in milliseconds for refreshing all data tags (default: 10.000ms)
@@ -146,3 +138,67 @@ equipments:
           register: holding32 # required; read => [holding] write => [holding]
           startAddress: 13000 # required
           count: 2 # optional for reading only one value, otherwise required
+
+  - name: E_MODBUS_SERVER # required
+    aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon (default: 100 000ms)
+    refreshInterval: 10000 # optional, time in milliseconds for refreshing all data tags (default: 10 000ms)
+    type: modbus # type of the connection
+    connectionSettings: # required
+      address: 192.168.111.77 # required
+      port: 32502 # required
+      unitID: 1 # optional but required? for load simulator device
+    # define all signals (data and commands) provided by the modbus interface
+    signals:
+      - name: TestBool # required
+        type: bool # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+          count: 1 # optional for reading only one value, otherwise required
+      - name: TestBool_W # required
+        type: bool # required, data type defined by SourceDataType enum
+        min: 0
+        max: 1
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+          count: 1 # optional for reading only one value, otherwise required
+      - name: TestBool2 # required
+        type: bool # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 1 # required
+          count: 1 # optional for reading only one value, otherwise required
+      - name: TestBool2_W # required
+        type: bool # required, data type defined by SourceDataType enum
+        min: 0
+        max: 1
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 1 # required
+          count: 1 # optional for reading only one value, otherwise required
+      - name: TestBool3 # required
+        type: bool # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 2 # required
+          count: 1 # optional for reading only one value, otherwise required
+      - name: TestBool3_W # required
+        type: bool # required, data type defined by SourceDataType enum
+        min: 0
+        max: 1
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 2 # required

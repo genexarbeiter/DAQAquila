@@ -51,7 +51,13 @@ public class ModbusTCPService {
 
     public void putValue(HardwareAddress hardwareAddress, Object value, String dataType) {
         Object[] result = preDataProcessing(value, hardwareAddress, dataType).orElseThrow(RuntimeException::new);
-        if (result.length == 1) {
+        if (hardwareAddress.getType().equals("coil")) {
+            try {
+                tcpModbusSocket.writeCoil(hardwareAddress.getStartAddress(), (boolean) result[0]);
+            } catch (Exception e) {
+                log.error("Could not write the value " + result[0] + " to register with startAddress " + hardwareAddress.getStartAddress(), e);
+            }
+        } else if (result.length == 1) {
             try {
                 tcpModbusSocket.writeRegister(hardwareAddress.getStartAddress(), (int) result[0]);
             } catch (Exception e) {
@@ -130,6 +136,7 @@ public class ModbusTCPService {
             case "java.lang.Integer":
                 return bb.getInt();
             case "s64":
+            case "u64":
             case "java.lang.Long": //"u64" (switched to XML Config)
                 return bb.getLong();
             case "float32":
@@ -149,21 +156,12 @@ public class ModbusTCPService {
      * @param response to parse
      * @return single boolean or boolean array depending on the response
      */
-    private Object parseCoilResponse(@NonNull ReadCoilsResponse response) {
-        if (response.getBitCount() == 1) {
-            return response.getCoilStatus(0);
-        } else {
-            final Boolean[] respValues = new Boolean[response.getBitCount()];
-            for (int i = 0; i < response.getBitCount(); i++) {
-                respValues[i] = response.getCoilStatus(i);
-            }
-            return respValues;
-        }
+    private boolean parseCoilResponse(@NonNull ReadCoilsResponse response) {
+        return response.getCoilStatus(0);
     }
 
     public Optional<Object[]> preDataProcessing(final Object writeValue, HardwareAddress hardwareAddress, String dataType) {
-        if (hardwareAddress.getType().equals("holding32") ||
-                hardwareAddress.getType().equals("holding64") || hardwareAddress.getType().equals("holding")) {
+        if (hardwareAddress.getType().equalsIgnoreCase("holding32") || hardwareAddress.getType().equalsIgnoreCase("holding64") || hardwareAddress.getType().equalsIgnoreCase("holding")) {
             final Integer[] result = new Integer[hardwareAddress.getValueCount()];
             ByteBuffer bb = ByteBuffer.allocate(2 * hardwareAddress.getValueCount());
             byte[] bytes = null;
@@ -255,6 +253,8 @@ public class ModbusTCPService {
             throw new RuntimeException("preDataProcessing: Cannot process data of type " + dataType +
                     " for write value count " + hardwareAddress.getValueCount() +
                     " from holding/holding32/holding64 register");
+        } else if (hardwareAddress.getType().equalsIgnoreCase("coil")) {
+            return Optional.of(new Boolean[]{(boolean) writeValue});
         }
         return Optional.empty();
     }

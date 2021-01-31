@@ -40,6 +40,7 @@ public class ConfigInitializer implements CommandLineRunner {
      */
     @Override
     public void run(String... args) {
+
         if (loadConfigFromServer()) {
             log.info("Configuration loaded from C2mon. Checking if force configuration is set to true...");
             if (FORCE_CONFIGURATION) {
@@ -137,6 +138,9 @@ public class ConfigInitializer implements CommandLineRunner {
                 equipment.getConnectionSettings().getAddress(),
                 equipment.getConnectionSettings().getPort(),
                 equipment.getConnectionSettings().getUnitID());
+        for(Signal signal : equipment.getSignals()) {
+            createTagFromSignal(signal, equipment.getName());
+        }
     }
 
     /**
@@ -241,11 +245,11 @@ public class ConfigInitializer implements CommandLineRunner {
         if (log.isInfoEnabled()) {
             log.info("Creating signal for tag {}...", signal.getName());
         }
-        if (signal.getModbus().getType().equals("read")) {
+        if (signal.getModbus().getType().equalsIgnoreCase("read")) {
             configService.createDataTag(equipmentName, signal.getName(), signal.getType(),
                     signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), getCount(signal.getType()),
                     signal.getOffset(), signal.getMultiplier(), signal.getThreshold(), signal.getModbus().getBitNumber());
-        } else if (signal.getModbus().getType().equals("write")) {
+        } else if (signal.getModbus().getType().equalsIgnoreCase("write")) {
             configService.createCommandTag(equipmentName, signal.getName(), signal.getType(),
                     signal.getModbus().getStartAddress(), signal.getModbus().getRegister(), getCount(signal.getType()),
                     signal.getMin(), signal.getMax(), signal.getModbus().getBitNumber());
