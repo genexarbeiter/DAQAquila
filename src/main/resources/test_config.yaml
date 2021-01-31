@@ -1,0 +1,146 @@
+general: # required
+  c2monHost: 192.168.111.77 # required
+  c2monPort: 32302 # optional, 61616 is the default port number
+  processName: DAQTEST_PROCESS_CINERGIA_4 # name of the process
+  forceConfiguration: true # if true all c2mon configuration for the process will be overwritten on daq startup
+  performanceMode: false # if true offset, multiplier and threshold checking is disabled for performance reasons
+
+equipments:
+  - name: E_MODBUS_SERVER # required
+    aliveTagInterval: 100000 #optional, time in milliseconds an aliveTag is sent to C2mon (default: 100 000ms)
+    refreshInterval: 10000 # optional, time in milliseconds for refreshing all data tags (default: 10 000ms)
+    type: modbus # type of the connection
+    connectionSettings: # required
+      address: 192.168.111.77 # required
+      port: 32502 # required
+      unitID: 1 # optional but required? for load simulator device
+    # define all signals (data and commands) provided by the modbus interface
+    signals:
+      - name: TestBool # required
+        type: bool # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+          count: 1 # optional for reading only one value, otherwise required
+      - name: TestBool_W # required
+        type: bool # required, data type defined by SourceDataType enum
+        min: 0
+        max: 1
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+
+      - name: TestByte # required
+        type: s8 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+      - name: TestByte_W # required
+        type: s8 # required, data type defined by SourceDataType enum
+        description: # optional
+        min: -128
+        max: 127
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+
+      - name: TestShort # required
+        type: s16 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 1 # required
+      - name: TestShort_W # required
+        type: s16 # required, data type defined by SourceDataType enum
+        min: -32768
+        max: 32767
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 1 # required
+
+      - name: TestInteger # required
+        type: s32 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 2 # required
+      - name: TestInteger_W # required
+        type: s32 # required, data type defined by SourceDataType enum
+        min: -2147483648
+        max: 2147483649
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: coil # required; read => [holding] write => [holding]
+          startAddress: 2 # required
+
+      - name: TestLong # required
+        type: s64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 4 # required
+
+      - name: TestLong_W # required
+        type: s64 # required, data type defined by SourceDataType enum
+        min: 0 #−9223372036854775808
+        max: 100000 #−9223372036854775808
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 4 # required
+
+      - name: TestFloat # required
+        type: float32 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 6 # required
+      - name: TestFloat_W # required
+        type: float32 # required, data type defined by SourceDataType enum
+        min: 0 # -1.7*10308
+        max: 1000000.25 # +1.7*10308
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 6 # required
+
+      - name: TestDouble # required
+        type: float64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 8 # required
+      - name: TestDouble_W # required
+        type: float64 # required, data type defined by SourceDataType enum
+        min: 0 # -1.7*10308
+        max: 1000000.25 # +1.7*10308
+        description: # optional
+        modbus: # required
+          type: write # required type can be one of the following words: [read,write]
+          register: holding # required; read => [holding] write => [holding]
+          startAddress: 8 # required
+
+      - name: TestInput # required
+        type: float64 # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: input # required; read => [holding] write => [holding]
+          startAddress: 0 # required

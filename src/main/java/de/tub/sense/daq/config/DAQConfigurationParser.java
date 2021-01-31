@@ -37,7 +37,7 @@ public class DAQConfigurationParser {
     private void loadFile() {
         try {
             if (System.getProperties().containsKey("c2mon.daq.demo-config") && System.getProperty("c2mon.daq.demo-config").equals("true")) {
-                daqConfigFileStream = new ClassPathResource("demo_config.yaml").getInputStream();
+                daqConfigFileStream = new ClassPathResource("test_config.yaml").getInputStream();
             } else {
                 File daqConfigFile = new File("daq-config.yaml");
                 daqConfigFileStream = new FileInputStream(daqConfigFile);
