@@ -202,3 +202,12 @@ equipments:
           type: write # required type can be one of the following words: [read,write]
           register: coil # required; read => [holding] write => [holding]
           startAddress: 2 # required
+      - name: TestInput # required
+        type: s16 # required, data type defined by SourceDataType enum
+        min: 0
+        max: 1
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: input # required; read => [holding] write => [holding]
+          startAddress: 1 # required

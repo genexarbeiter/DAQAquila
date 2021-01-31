@@ -19,19 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="945594be-b6a4-46d8-96ef-03189990fe79" name="Default Changelist" comment="- Fixed a bug, where when you updated a c2mon configuration and created a new equipment, the data tags would not get created">
+    <list default="true" id="945594be-b6a4-46d8-96ef-03189990fe79" name="Default Changelist" comment="- Fixed a bug, where when you updated a c2mon configuration and created a new equipment, the data tags would not get created&#10;- Coil register support (boolean value)">
       <change afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/bacnet/BacnetService.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/pico/PicoService.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/udp/UDPService.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/udp/UDPSocket.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/udp/UDPTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_commons_commons_lang3_3_4.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/config/ConfigInitializer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/modbus/ModbusTCPService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/modbus/ModbusTCPService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/de/tub/sense/daq/module/DAQMain.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/demo_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/demo_config.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -205,7 +200,7 @@
       <workItem from="1611583263905" duration="9622000" />
       <workItem from="1611911005891" duration="20390000" />
       <workItem from="1612087130366" duration="2113000" />
-      <workItem from="1612089733869" duration="2079000" />
+      <workItem from="1612089733869" duration="3727000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Commit">
       <created>1607332847816</created>
@@ -438,7 +433,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611576943142</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="- Fixed a bug, where when you updated a c2mon configuration and created a new equipment, the data tags would not get created&#10;- Coil register support (boolean value)">
+      <created>1612092158114</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1612092158114</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -457,7 +459,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dockerfile update" />
     <MESSAGE value="Test Modbus Tcp Connection" />
     <MESSAGE value="Load yaml configuration properly" />
     <MESSAGE value="Bug fix" />
@@ -482,7 +483,8 @@
     <MESSAGE value="- If refresh delay is not specified in c2mon xml, due to an older daq version, setting a default which amounts 10000ms&#10;- 'c2mon.daq.refreshInterval' environmental variable is no longer supported, config file has to be used&#10;- Better handling if something is misspelled in the config file&#10;- Removed model settings from config (unnecessary)&#10;- Better logging" />
     <MESSAGE value="- Added GeneralSettings to config file&#10;- Version 1.0.0" />
     <MESSAGE value="- Config file: 'count' option not longer necessary, 'holding', 'holding32' &amp; 'holding64' distinction not longer needed, just use 'holding'&#10;- Version 1.0.0" />
-    <option name="LAST_COMMIT_MESSAGE" value="- Config file: 'count' option not longer necessary, 'holding', 'holding32' &amp; 'holding64' distinction not longer needed, just use 'holding'&#10;- Version 1.0.0" />
+    <MESSAGE value="- Fixed a bug, where when you updated a c2mon configuration and created a new equipment, the data tags would not get created&#10;- Coil register support (boolean value)" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Fixed a bug, where when you updated a c2mon configuration and created a new equipment, the data tags would not get created&#10;- Coil register support (boolean value)" />
   </component>
   <component name="WindowStateProjectService">
     <state x="2465" y="96" key="#DAQConfigurerMain" timestamp="1607348140932">
@@ -729,9 +731,10 @@
     </state>
     <state x="359" y="134" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1609414867302" />
     <state x="2039" y="154" key="SettingsEditor/1680.23.1680.1027/0.23.1680.985@1680.23.1680.1027" timestamp="1607339053210" />
-    <state x="440" y="237" key="Vcs.Push.Dialog.v2" timestamp="1611576944727">
+    <state x="440" y="237" key="Vcs.Push.Dialog.v2" timestamp="1612092162201">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
+    <state x="440" y="237" key="Vcs.Push.Dialog.v2/-1920.-639.1920.1080/0.0.1680.1050@0.0.1680.1050" timestamp="1612092162201" />
     <state x="440" y="237" key="Vcs.Push.Dialog.v2/0.0.1680.1050@0.0.1680.1050" timestamp="1611576944727" />
     <state x="2183" y="-482" key="Vcs.Push.Dialog.v2/1680.-711.1920.1015/0.23.1680.1027@1680.-711.1920.1015" timestamp="1610376230580" />
     <state x="2183" y="-472" key="Vcs.Push.Dialog.v2/1680.-711.1920.1057/0.23.1680.1027@1680.-711.1920.1057" timestamp="1610713724999" />

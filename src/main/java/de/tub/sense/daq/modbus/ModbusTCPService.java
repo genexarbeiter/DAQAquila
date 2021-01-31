@@ -1,6 +1,7 @@
 package de.tub.sense.daq.modbus;
 
 import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
+import com.ghgande.j2mod.modbus.msg.ReadInputRegistersResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
 import de.tub.sense.daq.config.xml.HardwareAddress;
@@ -78,24 +79,34 @@ public class ModbusTCPService {
 
 
     public Optional<Object> getValue(HardwareAddress hardwareAddress, String dataType) {
-        if (hardwareAddress.getType().equals("holding32") || hardwareAddress.getType().equals("holding64") || hardwareAddress.getType().equals("holding")) {
-            try {
-                return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
-                        hardwareAddress.getValueCount()), dataType, hardwareAddress));
-            } catch (Exception e) {
-                log.warn("Could not read holding register with startAddress " + hardwareAddress.getStartAddress(), e);
+        switch (hardwareAddress.getType()) {
+            case "holding32":
+            case "holding64":
+            case "holding":
+                try {
+                    return Optional.of(parseHoldingResponse(tcpModbusSocket.readHoldingRegisters(hardwareAddress.getStartAddress(),
+                            hardwareAddress.getValueCount()), dataType, hardwareAddress));
+                } catch (Exception e) {
+                    log.warn("Could not read holding register with startAddress " + hardwareAddress.getStartAddress(), e);
+                    return Optional.empty();
+                }
+            case "coil":
+                try {
+                    return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
+                } catch (Exception e) {
+                    log.warn("Could not read coil with startAddress " + hardwareAddress.getStartAddress(), e);
+                    return Optional.empty();
+                }
+            case "input":
+                try {
+                    return Optional.of(parseInputResponse(tcpModbusSocket.readInputRegisters(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount()), dataType, hardwareAddress));
+                } catch (Exception e) {
+                    log.warn("Could not read input register with startAddress " + hardwareAddress.getStartAddress(), e);
+                    return Optional.empty();
+                }
+            default:
+                log.warn("Modbus type {} not valid.", hardwareAddress.getType());
                 return Optional.empty();
-            }
-        } else if (hardwareAddress.getType().equals("coil")) {
-            try {
-                return Optional.of(parseCoilResponse(tcpModbusSocket.readCoils(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
-            } catch (Exception e) {
-                log.warn("Could not read coil with startAddress " + hardwareAddress.getStartAddress(), e);
-                return Optional.empty();
-            }
-        } else {
-            log.warn("Modbus type {} not valid.", hardwareAddress.getType());
-            return Optional.empty();
         }
     }
 
@@ -118,33 +129,49 @@ public class ModbusTCPService {
             bb.putShort(respValues[i].shortValue());
         }
         bb.rewind();
+        return parseResponse(bb, dataType, hardwareAddress);
+    }
+
+    private Object parseInputResponse(ReadInputRegistersResponse response, String dataType, HardwareAddress hardwareAddress) {
+        final Integer[] respValues = new Integer[response.getByteCount()];
+        final ByteBuffer bb = ByteBuffer.allocate(2 * response.getByteCount());
+        for (int i = 0; i < response.getWordCount(); i++) {
+            respValues[i] = response.getRegisterValue(i);
+            bb.putShort(respValues[i].shortValue());
+        }
+        bb.rewind();
+        return parseResponse(bb, dataType, hardwareAddress);
+    }
+
+    private Object parseResponse(ByteBuffer buffer, String dataType, HardwareAddress hardwareAddress) {
+
         switch (dataType) {
             case "bool":
             case "java.lang.Boolean":
-                short s = bb.getShort();
+                short s = buffer.getShort();
                 return readBooleanFromShort(s, hardwareAddress.getBitNumber());
             case "s8":
             case "u8":
             case "java.lang.Byte":
-                return bb.get();
+                return buffer.get();
             case "s16":
             case "u16":
             case "java.lang.Short":
-                return bb.getShort();
+                return buffer.getShort();
             case "u32":
             case "s32":
             case "java.lang.Integer":
-                return bb.getInt();
+                return buffer.getInt();
             case "s64":
             case "u64":
-            case "java.lang.Long": //"u64" (switched to XML Config)
-                return bb.getLong();
+            case "java.lang.Long":
+                return buffer.getLong();
             case "float32":
             case "java.lang.Float":
-                return bb.getFloat();
+                return buffer.getFloat();
             case "java.lang.Double":
             case "float64":
-                return bb.getDouble();
+                return buffer.getDouble();
             default:
                 throw new IllegalArgumentException("Datatype " + dataType + " could not be converted");
         }
@@ -261,7 +288,7 @@ public class ModbusTCPService {
 
     private boolean readBooleanFromShort(short encoded, int index) {
         if (log.isTraceEnabled()) {
-            log.trace("Reading index {} from {}", index, Integer.toBinaryString((int) encoded));
+            log.trace("Reading index {} from {}", index, Integer.toBinaryString(encoded));
         }
         return (encoded & (1L << index)) != 0;
     }
