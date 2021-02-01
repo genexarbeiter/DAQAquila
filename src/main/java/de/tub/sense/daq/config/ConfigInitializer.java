@@ -89,9 +89,6 @@ public class ConfigInitializer implements CommandLineRunner {
         configService.createProcess();
         for (Equipment equipment : configurationFile.getEquipments()) {
             createEquipment(equipment);
-            for (Signal signal : equipment.getSignals()) {
-                createTagFromSignal(signal, equipment.getName());
-            }
         }
     }
 

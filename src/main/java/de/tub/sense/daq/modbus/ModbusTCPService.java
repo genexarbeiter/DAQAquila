@@ -1,6 +1,7 @@
 package de.tub.sense.daq.modbus;
 
 import com.ghgande.j2mod.modbus.msg.ReadCoilsResponse;
+import com.ghgande.j2mod.modbus.msg.ReadInputDiscretesResponse;
 import com.ghgande.j2mod.modbus.msg.ReadInputRegistersResponse;
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
@@ -104,6 +105,12 @@ public class ModbusTCPService {
                     log.warn("Could not read input register with startAddress " + hardwareAddress.getStartAddress(), e);
                     return Optional.empty();
                 }
+            case "discrete":
+                try {
+                    return Optional.of(parseDiscreteInputResponse(tcpModbusSocket.readDiscreteInputs(hardwareAddress.getStartAddress(), hardwareAddress.getValueCount())));
+                } catch (Exception e) {
+                    log.warn("Could not discrete input register with startAddress " + hardwareAddress.getStartAddress(), e);
+                }
             default:
                 log.warn("Modbus type {} not valid.", hardwareAddress.getType());
                 return Optional.empty();
@@ -141,6 +148,10 @@ public class ModbusTCPService {
         }
         bb.rewind();
         return parseResponse(bb, dataType, hardwareAddress);
+    }
+
+    private boolean parseDiscreteInputResponse(ReadInputDiscretesResponse response) {
+        return response.getDiscreteStatus(0);
     }
 
     private Object parseResponse(ByteBuffer buffer, String dataType, HardwareAddress hardwareAddress) {

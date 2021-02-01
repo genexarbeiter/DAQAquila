@@ -73,7 +73,7 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
                     sleepTime = 300;
                 }
                 log.error("Connection to modbus failed. Trying again in {} second(s)...", sleepTime);
-                Thread.sleep(sleepTime * 1000);
+                TimeUnit.MILLISECONDS.sleep(sleepTime * 1000);
             } catch (InterruptedException e) {
                 log.warn("Interrupted exception occurred while waiting for connection", e);
             }
@@ -182,7 +182,6 @@ public class DAQMessageHandler extends EquipmentMessageHandler implements IComma
                         return;
                     }
                 } else if (valueObject instanceof Boolean) {
-                    log.debug("Boolean update: {}", (boolean) valueObject);
                     equipmentMessageSender.update(tagId, new ValueUpdate(valueObject));
                 } else if (valueObject instanceof Integer) {
                     int valueInt = (int) valueObject;

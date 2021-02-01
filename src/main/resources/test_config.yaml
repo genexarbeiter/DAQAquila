@@ -16,6 +16,15 @@ equipments:
       unitID: 1 # optional but required? for load simulator device
     # define all signals (data and commands) provided by the modbus interface
     signals:
+      - name: TestDiscrete # required
+        type: bool # required, data type defined by SourceDataType enum
+        description: # optional
+        modbus: # required
+          type: read # required type can be one of the following words: [read,write]
+          register: discrete # required; read => [holding] write => [holding]
+          startAddress: 0 # required
+          count: 1 # optional for reading only one value, otherwise required
+
       - name: TestBool # required
         type: bool # required, data type defined by SourceDataType enum
         description: # optional
@@ -112,7 +121,7 @@ equipments:
           startAddress: 6 # required
       - name: TestFloat_W # required
         type: float32 # required, data type defined by SourceDataType enum
-        min: 0 # -1.7*10308
+        min: -15.1 # -1.7*10308
         max: 1000000.25 # +1.7*10308
         description: # optional
         modbus: # required
