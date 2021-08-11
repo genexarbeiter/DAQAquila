@@ -5,7 +5,7 @@ This DAQ is capable of connecting one or more modbus devices to a C2mon Server. 
 ## How to get started:
 1. Pull the Docker image
 ```
-docker pull docker image:1.0.0
+docker pull ghcr.io/genexarbeiter/daquila/daquila:latest
 ```
 2. Create a file named config file named daq-config.yaml in the root folder of the docker container. (Of course you can also mount the file)
 3. Modify the config for your purpose, here's an example of what it could (should) look like
@@ -68,5 +68,5 @@ equipments:
 ```
 4. Start the container
 ```
-docker start image:1.0.0
+docker start ghcr.io/genexarbeiter/daquila/daquila:latest
 ```
