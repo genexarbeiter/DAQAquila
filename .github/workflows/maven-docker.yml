@@ -53,6 +53,6 @@ jobs:
           PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY: "docker.pkg.github.com"
           DOCKERFILE: "Dockerfile"
-          IMAGE_NAME: "daquila"
+          IMAGE_NAME: "daqaquila"
           TAG_NAME: "v1.0.0"
           LATEST: "true"
