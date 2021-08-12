@@ -1,4 +1,4 @@
-# daquila - C2mon Data Aquisition for Modbus devices
+# daquila - C2mon data acquisition for Modbus devices
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 If you want to connect a modbus device with a C2mon Server, you can use this project.
