@@ -59,8 +59,7 @@ public class DAQMain {
         } else {
             System.setProperty("c2mon.daq.demo-config", System.getenv("c2mon.daq.demoConfig"));
         }
-        //TODO Undo
-        System.setProperty("c2mon.daq.demo-config","true");
+        //System.setProperty("c2mon.daq.demo-config","true");
     }
 
     /**
